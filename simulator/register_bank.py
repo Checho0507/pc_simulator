@@ -1,50 +1,68 @@
-class BancoDeRegistros:
-    """
-    Banco de registros de propósito general.
-    Administra los registros de uso general y especiales.
-    """
-    def __init__(self, cantidad_registros=8, tamaño_palabra=32):
-        """
-        Inicializa el banco de registros.
-        
-        Args:
-            cantidad_registros (int): Número de registros en el banco.
-            tamaño_palabra (int): Tamaño de cada registro en bits.
-        """
-        self.registros = [0] * cantidad_registros  # Registros inicializados en 0
-        self.tamaño_palabra = tamaño_palabra
+from simulator.registers import Registro
 
-    def escribir_registro(self, indice, valor):
+class RegisterBank:
+    def __init__(self):
         """
-        Escribe un valor en un registro específico.
-        
-        Args:
-            indice (int): Índice del registro.
-            valor (int): Valor a escribir.
+        Inicializa el banco de registros con registros por defecto (A, B, C, etc.)
         """
-        if 0 <= indice < len(self.registros):
-            self.registros[indice] = valor
+        self.registros = {}
+
+    def agregar_registro(self, nombre):
+        """
+        Agrega un nuevo registro al banco.
+        :param nombre: Nombre del registro a agregar.
+        """
+        if nombre not in self.registros:
+            self.registros[nombre] = Registro(nombre)
         else:
-            raise IndexError(f"Registro {indice} fuera de rango.")
+            print(f"Error: El registro '{nombre}' ya existe.")
 
-    def leer_registro(self, indice):
+    def obtener_registro(self, nombre):
         """
-        Lee el valor de un registro específico.
-        
-        Args:
-            indice (int): Índice del registro.
-
-        Returns:
-            int: Valor almacenado en el registro.
+        Obtiene el registro por su nombre.
+        :param nombre: Nombre del registro.
+        :return: El objeto Registro correspondiente.
         """
-        if 0 <= indice < len(self.registros):
-            return self.registros[indice]
+        if nombre in self.registros:
+            return self.registros[nombre]
         else:
-            raise IndexError(f"Registro {indice} fuera de rango.")
+            print(f"Error: El registro '{nombre}' no existe.")
+            return None
+
+    def eliminar_registro(self, nombre):
+        """
+        Elimina un registro del banco de registros.
+        :param nombre: Nombre del registro a eliminar.
+        """
+        if nombre in self.registros:
+            del self.registros[nombre]
+        else:
+            print(f"Error: El registro '{nombre}' no existe.")
 
     def mostrar_registros(self):
         """
-        Muestra el contenido de todos los registros.
+        Muestra todos los registros del banco de registros.
         """
-        for i, valor in enumerate(self.registros):
-            print(f"R{i}: {valor}")
+        for registro in self.registros.values():
+            print(registro)
+
+    def asignar_valor(self, nombre, valor):
+        """
+        Asigna un valor a un registro específico.
+        :param nombre: Nombre del registro.
+        :param valor: Valor a asignar al registro.
+        """
+        registro = self.obtener_registro(nombre)
+        if registro:
+            registro.set_valor(valor)
+
+    def obtener_valor(self, nombre):
+        """
+        Obtiene el valor de un registro.
+        :param nombre: Nombre del registro.
+        :return: El valor del registro.
+        """
+        registro = self.obtener_registro(nombre)
+        if registro:
+            return registro.get_valor()
+        return None
