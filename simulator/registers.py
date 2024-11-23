@@ -18,7 +18,6 @@ class MAR:
         """
         return self.valor
 
-
 class MBR:
     """
     Clase que representa el Registro MBR (Memory Buffer Register).
@@ -39,7 +38,6 @@ class MBR:
         """
         return self.valor
 
-
 class IR:
     """
     Clase que representa el Registro IR (Instruction Register).
@@ -59,52 +57,6 @@ class IR:
         Obtiene la instrucción almacenada en el IR.
         """
         return self.valor
-
-
-class RegisterBank:
-    """
-    Clase que representa el banco de registros generales de propósito.
-    Aquí se almacenan los registros como A, B, C, etc.
-    """
-    def __init__(self):
-        self.registros = {}
-
-    def agregar_registro(self, nombre):
-        """
-        Agrega un nuevo registro al banco.
-        """
-        if nombre not in self.registros:
-            self.registros[nombre] = Registro(nombre)
-        else:
-            print(f"El registro '{nombre}' ya existe.")
-
-    def obtener_registro(self, nombre):
-        """
-        Obtiene un registro del banco por su nombre.
-        """
-        if nombre in self.registros:
-            return self.registros[nombre]
-        else:
-            print(f"Error: El registro '{nombre}' no existe.")
-            return None
-
-    def asignar_valor(self, nombre, valor):
-        """
-        Asigna un valor a un registro específico del banco.
-        """
-        registro = self.obtener_registro(nombre)
-        if registro:
-            registro.set_valor(valor)
-
-    def obtener_valor(self, nombre):
-        """
-        Obtiene el valor de un registro específico del banco.
-        """
-        registro = self.obtener_registro(nombre)
-        if registro:
-            return registro.get_valor()
-        return None
-
 
 class Registro:
     """

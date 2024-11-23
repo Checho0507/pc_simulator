@@ -1,28 +1,35 @@
-from alu import ALU
-from bus import Bus
-from memory import Memory
-from registers import MAR, MBR, IR, RegisterBank
-from io_devices import IO
-from parser import Parser
+from .alu import ALU
+from .bus import Bus
+from .memory import Memoria
+from .registers import MAR, MBR, IR
+from .register_bank import RegisterBank
+from .io_devices import UnidadDeIO
+from .parser import Parser
+from .control_unit import UnidadDeControl
 
 class Simulator:
     def __init__(self):
         # Componentes del simulador
         self.alu = ALU()
         self.bus = Bus()
-        self.memory = Memory(size=1024)  # Memoria de 1024 direcciones
+        self.memory = Memoria(size=1024)  # Memoria de 1024 direcciones
         self.mar = MAR()  # Registro de dirección de memoria
         self.mbr = MBR()  # Registro de búfer de memoria
         self.ir = IR()  # Registro de instrucción
         self.register_bank = RegisterBank()  # Banco de registros
-        self.io_device = IO()  # Dispositivo de I/O
-        self.parser = Parser()  # Analizador de instrucciones
+        self.unidad_control = UnidadDeControl(self.bus, self.alu, self.register_bank, self.memory)
+        self.io_device = UnidadDeIO(self.bus, self.memory)  # Dispositivo de I/O
+        self.parser = Parser(self.unidad_control)  # Analizador de instrucciones
         
         # Agregar registros al banco
         self.register_bank.agregar_registro("A")
         self.register_bank.agregar_registro("B")
         self.register_bank.agregar_registro("C")
         self.register_bank.agregar_registro("D")
+        
+         # Se inicializa el contador del programa en 0
+        self.register_bank.agregar_registro("PC")
+        self.register_bank.asignar_valor("PC", 0)
 
     def cargar_programa(self, programa):
         """
@@ -30,21 +37,21 @@ class Simulator:
         El programa es una lista de instrucciones de bajo nivel.
         """
         for i, instruccion in enumerate(programa):
-            self.memory.write(i, instruccion)
+            self.memory.escribir(i, instruccion)
 
-    def ejecutar(self):
+    def ejecutar(self, instrucciones):
         """
         Ejecuta el ciclo de procesamiento del simulador.
         """
         while True:
             # Obtener la instrucción desde la memoria
             self.mar.set_valor(self.register_bank.obtener_valor("PC"))  # PC -> MAR
-            instruccion = self.memory.read(self.mar.get_valor())  # Obtener la instrucción desde la memoria
+            instruccion = self.memory.leer(self.mar.get_valor())  # Obtener la instrucción desde la memoria
             self.ir.set_valor(instruccion)  # Guardar la instrucción en IR
-
+            print(self.ir.get_valor() + "IR")
             # Analizar la instrucción
-            decoded_instruction = self.parser.parse(self.ir.get_valor())  # Decodificar la instrucción
-
+            decoded_instruction = self.parser.parsear(instrucciones)  # Decodificar la instrucción
+            
             # Procesar la instrucción
             self.procesar_instruccion(decoded_instruction)
 

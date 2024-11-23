@@ -1,5 +1,4 @@
-from simulator.registers import Registro
-
+from .registers import Registro
 
 class UnidadDeControl:
     def __init__(self, bus, alu, registros, memoria):
@@ -72,3 +71,25 @@ class UnidadDeControl:
         Actualiza el contador de programa (PC) para que apunte a la siguiente instrucción.
         """
         self.pc.set_value(self.pc.get_value() + 1)  # Incrementa el PC para apuntar a la siguiente instrucción
+        
+    def convertir_a_binario_cero(self, instrucciones, instrucciones_binarias, registros_binarios):
+        instrucciones_bin = []
+
+        for instruccion in instrucciones:
+            partes = instruccion.split()  # Dividimos la instrucción en partes
+            operacion = partes[0]  # La primera parte es la operación
+            if operacion in instrucciones_binarias:
+                # Obtener el código binario de la operación (8 o 16 bits)
+                instruccion_bin = instrucciones_binarias[operacion]
+
+                # Procesar los operandos 
+                if len(partes) == 2:  # Caso de 1 dirección (MOV A)
+                    registro = partes[1]
+                    if registro in registros_binarios:
+                        # Si es un registro, concatenamos su valor binario
+                        instruccion_bin += registros_binarios[registro]
+                
+                # Aseguramos que la instrucción tiene exactamente 32 bits
+                instrucciones_bin.append(instruccion_bin)
+
+        return instrucciones_bin

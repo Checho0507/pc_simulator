@@ -1,7 +1,6 @@
 import re
-
 class Parser:
-    def __init__(self, registros, alu, memoria, bus, unidad_control):
+    def __init__(self, unidad_control):
         """
         Inicializa el analizador sintáctico.
         :param registros: El banco de registros.
@@ -10,11 +9,11 @@ class Parser:
         :param bus: El bus del sistema.
         :param unidad_control: La unidad de control que maneja el flujo.
         """
-        self.registros = registros
-        self.alu = alu
-        self.memoria = memoria
-        self.bus = bus
         self.unidad_control = unidad_control
+        self.registros = self.unidad_control.registros
+        self.alu = self.unidad_control.alu
+        self.memoria = self.unidad_control.memoria
+        self.bus = self.unidad_control.bus
 
     def parsear(self, instrucciones):
         """

@@ -1,15 +1,15 @@
 class Memoria:
-    def __init__(self, tamaño, particion="física"):
+    def __init__(self, size, particion="física"):
         """
         Inicializa la memoria con un tamaño determinado y partición especificada.
         :param tamaño: El número de direcciones de memoria.
         :param particion: El tipo de partición ("física" o "lógica").
         """
-        self.tamaño = tamaño
+        self.size = size
         self.particion = particion
         # Inicializamos la memoria con valores nulos
-        self.memoria = [0] * tamaño
-        print(f"Memoria de tamaño {tamaño} con partición {particion} inicializada.")
+        self.memoria = [0] * size
+        print(f"Memoria de tamaño {size} con partición {particion} inicializada.")
 
     def leer(self, direccion):
         """
@@ -17,7 +17,7 @@ class Memoria:
         :param direccion: La dirección de memoria desde donde leer.
         :return: El valor almacenado en la dirección de memoria.
         """
-        if direccion < 0 or direccion >= self.tamaño:
+        if direccion < 0 or direccion >= self.size:
             raise ValueError("Dirección fuera de rango.")
         return self.memoria[direccion]
 
@@ -27,7 +27,7 @@ class Memoria:
         :param direccion: La dirección de memoria donde se escribirá el valor.
         :param valor: El valor a escribir en la memoria.
         """
-        if direccion < 0 or direccion >= self.tamaño:
+        if direccion < 0 or direccion >= self.size:
             raise ValueError("Dirección fuera de rango.")
         self.memoria[direccion] = valor
         print(f"Escrito {valor} en la dirección {direccion}.")

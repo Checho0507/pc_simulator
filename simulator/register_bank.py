@@ -1,4 +1,4 @@
-from simulator.registers import Registro
+from .registers import Registro
 
 class RegisterBank:
     def __init__(self):
