@@ -1,139 +1,49 @@
-from .alu import ALU
-from .bus import Bus
-from .memory import Memoria
-from .registers import MAR, MBR, IR
-from .register_bank import RegisterBank
-from .io_devices import UnidadDeIO
-from .parser import Parser
-from .control_unit import UnidadDeControl
+from simulator.alu import ALU
+from simulator.bus.address_bus import AddressBus
+from simulator.bus.control_bus import ControlBus
+from simulator.bus.data_bus import DataBus
+from simulator.control_unit import ControlUnit
+from simulator.memory import Memory
+from simulator.memory_manager import MemoryManager
+from simulator.register_bank import RegisterBank
+from simulator.registers import Register
+
 
 class Simulator:
     def __init__(self):
-        # Componentes del simulador
+        # Crear buses
+        self.dataBus = DataBus()
+        self.addressBus = AddressBus()
+        self.controlBus = ControlBus()
+
+        # Crear componentes principales
+        self.controlUnit = ControlUnit(self.dataBus, self.addressBus, self.controlBus)
+        self.memory = Memory(256, self.dataBus, self.addressBus)
         self.alu = ALU()
-        self.bus = Bus()
-        self.memory = Memoria(size=1024)  # Memoria de 1024 direcciones
-        self.mar = MAR()  # Registro de dirección de memoria
-        self.mbr = MBR()  # Registro de búfer de memoria
-        self.ir = IR()  # Registro de instrucción
-        self.register_bank = RegisterBank()  # Banco de registros
-        self.unidad_control = UnidadDeControl(self.bus, self.alu, self.register_bank, self.memory)
-        self.io_device = UnidadDeIO(self.bus, self.memory)  # Dispositivo de I/O
-        self.parser = Parser(self.unidad_control)  # Analizador de instrucciones
-        
-        # Agregar registros al banco
-        self.register_bank.agregar_registro("A")
-        self.register_bank.agregar_registro("B")
-        self.register_bank.agregar_registro("C")
-        self.register_bank.agregar_registro("D")
-        
-         # Se inicializa el contador del programa en 0
-        self.register_bank.agregar_registro("PC")
-        self.register_bank.asignar_valor("PC", 0)
+        self.registerBank = RegisterBank()
 
-    def cargar_programa(self, programa):
-        """
-        Carga un programa de instrucciones en la memoria.
-        El programa es una lista de instrucciones de bajo nivel.
-        """
-        for i, instruccion in enumerate(programa):
-            self.memory.escribir(i, instruccion)
+        # Inicializar registros
+        self.registerBank.addRegister("PC", Register())
+        self.registerBank.addRegister("IR", Register())
+        self.registerBank.addRegister("MAR", Register())
+        self.registerBank.addRegister("MBR", Register())
 
-    def ejecutar(self, instrucciones):
-        """
-        Ejecuta el ciclo de procesamiento del simulador.
-        """
-        while True:
-            # Obtener la instrucción desde la memoria
-            self.mar.set_valor(self.register_bank.obtener_valor("PC"))  # PC -> MAR
-            instruccion = self.memory.leer(self.mar.get_valor())  # Obtener la instrucción desde la memoria
-            self.ir.set_valor(instruccion)  # Guardar la instrucción en IR
-            print(self.ir.get_valor() + "IR")
-            # Analizar la instrucción
-            decoded_instruction = self.parser.parsear(instrucciones)  # Decodificar la instrucción
-            
-            # Procesar la instrucción
-            self.procesar_instruccion(decoded_instruction)
+    def executeProgram(self):
+        # Crear buses y componentes principales
+        dataBus = DataBus()
+        addressBus = AddressBus()
+        controlBus = ControlBus()
+        controlUnit = ControlUnit(dataBus, addressBus, controlBus)
+        memory = Memory(256, dataBus, addressBus)
+        registerBank = RegisterBank()
+        memoryManager = MemoryManager(controlUnit, memory, registerBank)
 
-            # Incrementar el contador de programa (PC)
-            self.register_bank.asignar_valor("PC", self.register_bank.obtener_valor("PC") + 1)
+        # Ejemplo de programa para instrucciones de cero direcciones
+        program_zero = [
+            "A = -1", "C = 2", "D = 3", "E = 4", "PUSH D", "PUSH E", 
+            "SUB", "PUSH A", "MUL", "POP X", "PUSH A", "PUSH C", 
+            "MUL", "PUSH X", "DIV", "POP Z"
+        ]
 
-            # Si la instrucción es "HALT", terminar la ejecución
-            if decoded_instruction["operacion"] == "HALT":
-                print("Simulación terminada.")
-                break
-
-    def procesar_instruccion(self, decoded_instruction):
-        """
-        Procesa una instrucción decodificada.
-        """
-        operacion = decoded_instruction["operacion"]
-        if operacion == "ADD":
-            self.procesar_suma(decoded_instruction)
-        elif operacion == "SUB":
-            self.procesar_resta(decoded_instruction)
-        elif operacion == "MUL":
-            self.procesar_multiplicacion(decoded_instruction)
-        elif operacion == "DIV":
-            self.procesar_division(decoded_instruction)
-        elif operacion == "MOV":
-            self.procesar_asignacion(decoded_instruction)
-        elif operacion == "CMP":
-            self.procesar_comparacion(decoded_instruction)
-        elif operacion == "HALT":
-            pass  # Termina la ejecución
-        else:
-            print(f"Operación {operacion} no soportada.")
-
-    def procesar_suma(self, decoded_instruction):
-        """
-        Procesa la operación de suma.
-        """
-        reg1 = decoded_instruction["reg1"]
-        reg2 = decoded_instruction["reg2"]
-        resultado = self.alu.sumar(self.register_bank.obtener_valor(reg1), self.register_bank.obtener_valor(reg2))
-        self.register_bank.asignar_valor(decoded_instruction["destino"], resultado)
-
-    def procesar_resta(self, decoded_instruction):
-        """
-        Procesa la operación de resta.
-        """
-        reg1 = decoded_instruction["reg1"]
-        reg2 = decoded_instruction["reg2"]
-        resultado = self.alu.restar(self.register_bank.obtener_valor(reg1), self.register_bank.obtener_valor(reg2))
-        self.register_bank.asignar_valor(decoded_instruction["destino"], resultado)
-
-    def procesar_multiplicacion(self, decoded_instruction):
-        """
-        Procesa la operación de multiplicación.
-        """
-        reg1 = decoded_instruction["reg1"]
-        reg2 = decoded_instruction["reg2"]
-        resultado = self.alu.multiplicar(self.register_bank.obtener_valor(reg1), self.register_bank.obtener_valor(reg2))
-        self.register_bank.asignar_valor(decoded_instruction["destino"], resultado)
-
-    def procesar_division(self, decoded_instruction):
-        """
-        Procesa la operación de división.
-        """
-        reg1 = decoded_instruction["reg1"]
-        reg2 = decoded_instruction["reg2"]
-        resultado = self.alu.dividir(self.register_bank.obtener_valor(reg1), self.register_bank.obtener_valor(reg2))
-        self.register_bank.asignar_valor(decoded_instruction["destino"], resultado)
-
-    def procesar_asignacion(self, decoded_instruction):
-        """
-        Procesa una operación de asignación.
-        """
-        reg1 = decoded_instruction["reg1"]
-        self.register_bank.asignar_valor(decoded_instruction["destino"], self.register_bank.obtener_valor(reg1))
-
-    def procesar_comparacion(self, decoded_instruction):
-        """
-        Procesa una operación de comparación (ej., A == B).
-        """
-        reg1 = decoded_instruction["reg1"]
-        reg2 = decoded_instruction["reg2"]
-        resultado = self.alu.comparar(self.register_bank.obtener_valor(reg1), self.register_bank.obtener_valor(reg2))
-        self.register_bank.asignar_valor(decoded_instruction["destino"], resultado)
-
+        print("Loading zero-address instructions:")
+        memoryManager.load_program(program_zero)
