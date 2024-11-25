@@ -184,49 +184,71 @@ class Simulator:
         elif str(codop) == "00000010":
             sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
             sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
-
-            operand1 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
-            operand2 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
             
-            self.alu.add(sign1, operand1, sign2, operand2)
+            self.memory.dataBus.sendData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU")
+            self.memory.dataBus.receiveData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU")
+            operand01 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
+            operand02 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
+            
+            self.alu.add(sign1, operand01, sign2, operand02)
             self.pila.pop()
             self.pila.pop()
             self.pila.append(self.int_to_binary(int(self.alu.getResult())))
             
+            self.memory.dataBus.sendData(codop+operand1+self.pila[0][1:], "ALU", "REGISTER BANK")
+            self.memory.dataBus.receiveData(codop+operand1+self.pila[0][1:], "ALU", "REGISTER BANK")
+            
         elif str(codop) == "00000011":
             sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
             sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
-
-            operand1 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
-            operand2 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
             
-            self.controlUnit.alu.sub(sign1, operand1, sign2, operand2)
+            self.memory.dataBus.sendData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU")
+            self.memory.dataBus.receiveData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU")
+            operand01 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
+            operand02 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
+            
+            self.controlUnit.alu.sub(sign1, operand01, sign2, operand02)
             self.pila.pop()
             self.pila.pop()
             self.pila.append(self.int_to_binary(int(self.controlUnit.alu.getResult())))
+            
+            self.memory.dataBus.sendData(codop+operand1+self.pila[0][1:], "ALU", "REGISTER BANK")
+            self.memory.dataBus.receiveData(codop+operand1+self.pila[0][1:], "ALU", "REGISTER BANK")
+            
         elif str(codop) == "00000100":
             sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
             sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
-
-            operand1 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
-            operand2 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
             
-            self.controlUnit.alu.mul(sign1, operand1, sign2, operand2)
+            self.memory.dataBus.sendData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU")
+            self.memory.dataBus.receiveData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU")
+            operand01 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
+            operand02 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
+            
+            self.controlUnit.alu.mul(sign1, operand01, sign2, operand02)
             self.pila.pop()
             self.pila.pop()
             self.pila.append(self.int_to_binary(int(self.controlUnit.alu.getResult())))
             print(int(self.controlUnit.alu.getResult()))
+            
+            self.memory.dataBus.sendData(codop+operand1+self.pila[0][1:], "ALU", "REGISTER BANK")
+            self.memory.dataBus.receiveData(codop+operand1+self.pila[0][1:], "ALU", "REGISTER BANK")
+            
         elif str(codop) == "00000101":
             sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
             sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
 
-            operand1 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
-            operand2 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
+            self.memory.dataBus.sendData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU")
+            self.memory.dataBus.receiveData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU")
+            operand01 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
+            operand02 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
             
-            self.controlUnit.alu.div(sign1, operand1, sign2, operand2)
+            self.controlUnit.alu.div(sign1, operand01, sign2, operand02)
             self.pila.pop()
             self.pila.pop()
             self.pila.append(self.int_to_binary(int(self.controlUnit.alu.getResult())))
+            self.memory.dataBus.sendData(codop+operand1+self.pila[0][1:], "ALU", "REGISTER BANK")
+            self.memory.dataBus.receiveData(codop+operand1+self.pila[0][1:], "ALU", "REGISTER BANK")
+            
         elif str(codop) == "00000110":
             self.registerBank.addRegister(self.controlUnit.identify_key(operand1), self.pila[0])
             print(self.registerBank.getRegister(self.controlUnit.identify_key(operand1)))
