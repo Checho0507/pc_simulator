@@ -16,7 +16,7 @@ class Memory:
 
     def write(self, address, data):
         print(f"Escribiendo {data} en la dirección de memoria {address}")
-        time.sleep(2)
+        time.sleep(0)
         if 0 <= address < self.size:
             self.memoryArray[address] = data
         else:

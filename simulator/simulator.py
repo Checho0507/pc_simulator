@@ -9,6 +9,7 @@ from simulator.register_bank import RegisterBank
 
 class Simulator:
     def __init__(self):
+        self.pila = deque()
         # Crear buses
         self.dataBus = DataBus()
         self.addressBus = AddressBus()
@@ -16,7 +17,7 @@ class Simulator:
 
         # Crear componentes principales
         self.registerBank = RegisterBank()
-        self.memory = Memory(1024, self.dataBus, self.addressBus)
+        self.memory = Memory(64, self.dataBus, self.addressBus)
         self.controlUnit = ControlUnit(self.dataBus, self.addressBus, self.controlBus, self.registerBank, self.memory)
 
     def executeProgram(self):
@@ -30,39 +31,46 @@ class Simulator:
         }
 
         print("Loading zero-address instructions:")
-        self.add_asigns(programs[0])
+        count = self.add_asigns(programs[0])
         self.encode_instructions_zero(programs[0])
         self.load_program_zero(programs[0])
         self.registerBank.PC.setValue("00000000000000000000000000000000")
-        while self.registerBank.PC.getValue() != "11111111111111111111111111111111":
+        for i in range(len(programs[0])-count):
             self.controlBus.sendControlSignal("FETCH")
             self.controlUnit.fetch()
             self.controlBus.receiveControlSignal()
+            
             self.controlBus.sendControlSignal("DECODE")
             codop, operand1, operand2 = self.controlUnit.decode()
             self.controlBus.receiveControlSignal()
-            self.controlUnit.alu.add(self.registerBank.PC.getValue(),"1")
-            self.registerBank.PC.setValue(self.int_to_binary(self.controlUnit.alu.getResult(),32))
             
-            if codop == "11111111":
-                self.registerBank.PC.setValue("11111111111111111111111111111111")
+            self.controlBus.sendControlSignal("EXECUTE")
+            self.controlUnit.execute(codop, operand1, operand2)
+            self.controlBus.receiveControlSignal()
+            
+            self.controlUnit.value_operation=self.int_to_binary(self.controlUnit.alu.getResult())
+            self.controlUnit.alu.add(1,int(self.registerBank.PC.getValue(),2),1,1)
+            
+            self.registerBank.PC.setValue(self.int_to_binary(self.controlUnit.alu.getResult(),32))
         
     def add_asigns(self, instructions):
         print("Agregando asignaciones al banco de registros")
+        count = 0
         for instr in instructions:
             if "=" in instr:  # Asignación al banco de registros
+                count += 1
                 var, val = instr.split(" = ")
                 value = int(val.strip())
                 encoded = self.encode_assignment(var.strip(), value)
                 print(f"Encoded assignment {instr}: {encoded}")
                 encoded_val = self.int_to_binary(value)
                 self.registerBank.addRegister(var, encoded_val)  # Guardar en el banco de registros
-                time.sleep(2)
+        return count
     
     def encode_instructions_zero(self, instructions):
         print("Codificando instrucción a nivel máquina:")
         # Crear una pila para las instrucciones de cero direcciones
-        self.pila = deque()
+        pila = deque()
         for instr in instructions:
             if "=" not in instr:  # Instrucciones a memoria
                 parts = instr.split()
@@ -71,7 +79,7 @@ class Simulator:
                     operands = parts[1]  # Operandos como strings
                 else:
                     operands = None
-                encoded = self.controlUnit.encode_zero_address_instruction(operation, operands, self.pila)
+                encoded = self.controlUnit.encode_zero_address_instruction(operation, operands, pila)
                 print(f"Encoded instruction {instr}: {encoded}")
         
     def load_program_zero(self, instructions):
@@ -107,8 +115,8 @@ class Simulator:
                 
                 self.memory.write(int(MAR, 2), MBR)
                 
-                self.controlUnit.alu.add(self.registerBank.PC.getValue(),"1")
-                self.registerBank.PC.setValue(self.int_to_binary(self.controlUnit.alu.getResult(),32))
+                self.controlUnit.alu.add(1,int(self.registerBank.PC.getValue(),2),1,1)
+                self.registerBank.PC.setValue(self.int_to_binary(int(self.controlUnit.alu.getResult()),32))
     
     def int_to_binary(self, value, bits=12):
         """
@@ -153,6 +161,6 @@ class Simulator:
         codop = self.controlUnit.asignaciones.get(variable + " = ", "00000000")
         sign_bit = '0' if value >= 0 else '1'
         value_binary = f"{abs(value):011b}"
-        return codop + self.controlUnit.registros_binarios_cero[variable] + sign_bit + value_binary
+        return codop + self.controlUnit.registros_binarios[variable] + sign_bit + value_binary
 
     
