@@ -22,20 +22,20 @@ class Simulator:
 
     def executeProgram(self):
         # Ejemplo de programa para instrucciones de cero direcciones
-        program_zero = [
+        programs = {
+            0:[
             "A = -1", "C = 2", "D = 3", "E = 4", "PUSH D", "PUSH E", 
             "SUB", "PUSH A", "MUL", "POP X", "PUSH A", "PUSH C", 
             "MUL", "PUSH X", "DIV", "POP Z"
-        ]
+            ]
+        }
 
         print("Loading zero-address instructions:")
-        self.load_program(program_zero)
+        self.add_asigns(programs[0])
+        self.encode_instructions_zero(programs[0])
+        self.load_program_zero(programs[0])
         
-    def load_program(self, instructions):
-        """
-        Procesa y carga las instrucciones y asignaciones en memoria.
-        """
-        
+    def add_asigns(self, instructions):
         print("Agregando asignaciones al banco de registros")
         time.sleep(2)
         for instr in instructions:
@@ -47,8 +47,9 @@ class Simulator:
                 encoded_val = self.int_to_binary(value)
                 self.registerBank.addRegister(var, encoded_val)  # Guardar en el banco de registros
                 time.sleep(2)
-                
-        print("Decodificando instrucción a nivel máquina:")
+    
+    def encode_instructions_zero(self, instructions):
+        print("Codificando instrucción a nivel máquina:")
         # Crear una pila para las instrucciones de cero direcciones
         self.pila = deque()
         for instr in instructions:
@@ -62,6 +63,11 @@ class Simulator:
                 encoded = self.controlUnit.encode_zero_address_instruction(operation, operands, self.pila)
                 print(f"Encoded instruction {instr}: {encoded}")
                 time.sleep(2)
+        
+    def load_program_zero(self, instructions):
+        """
+        Procesa y carga las instrucciones y asignaciones en memoria.
+        """
         
         print("Cargando el programa a la memoria:")
         time.sleep(2)

@@ -1,3 +1,5 @@
+import time
+
 class Memory:
     def __init__(self, size, dataBus, addressBus):
         self.memoryArray = [0] * size
@@ -16,6 +18,7 @@ class Memory:
 
     def write(self, address, data):
         print(f"Escribiendo {data} en la dirección de memoria {address}")
+        time.sleep(2)
         if 0 <= address < self.size:
             self.memoryArray[address] = data
         else:

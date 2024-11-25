@@ -7,12 +7,12 @@ class ControlBus:
     def sendControlSignal(self, signal):
         self.controlSignals.append(signal)
         print(f"ControlBus: Sending control signal '{signal}'")
-        time.sleep(2)
+        time.sleep(0)
 
     def receiveControlSignal(self):
         if self.controlSignals:
             signal = self.controlSignals.pop(0)
             print(f"ControlBus: Receiving control signal '{signal}'")
-            time.spleep(2)
+            time.spleep(0)
             return signal
         return None

@@ -6,8 +6,8 @@ class AddressBus:
 
     def sendAddress(self, address, source, destination):
         print(f"AddressBus: Sending {address} from {source} to {destination}")
-        time.sleep(2)
+        time.sleep(0)
 
     def receiveAddress(self, address, source, destination):
         print(f"AddressBus: {destination} is receiving {address} from {source}")
-        time.sleep(2)
+        time.sleep(0)
