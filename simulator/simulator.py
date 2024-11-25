@@ -35,6 +35,7 @@ class Simulator:
         self.encode_instructions_zero(programs[0])
         self.load_program_zero(programs[0])
         self.registerBank.PC.setValue("00000000000000000000000000000000")
+        self.pila.clear()
         for i in range(len(programs[0])-count):
             self.controlBus.sendControlSignal("FETCH")
             self.controlUnit.fetch()
@@ -45,7 +46,7 @@ class Simulator:
             self.controlBus.receiveControlSignal()
             
             self.controlBus.sendControlSignal("EXECUTE")
-            self.controlUnit.execute(codop, operand1, operand2)
+            self.execute(codop, operand1, operand2)
             self.controlBus.receiveControlSignal()
             
             self.controlUnit.value_operation=self.int_to_binary(self.controlUnit.alu.getResult())
@@ -163,4 +164,65 @@ class Simulator:
         value_binary = f"{abs(value):011b}"
         return codop + self.controlUnit.registros_binarios[variable] + sign_bit + value_binary
 
-    
+    def execute(self, codop, operand1, operand2):
+        direction = self.controlUnit.identify_directions(codop)
+        if direction == 0:
+            self.execute_zero(codop, operand1, operand2)
+                
+    def execute_zero(self, codop, operand1, operand2):
+        
+        if str(codop) == "00000001":
+            self.pila.append(operand2)
+        elif str(codop) == "00000010":
+            sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
+            sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
+
+            operand1 = sign1 * int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
+            operand2 = sign2 * int(self.pila[1][1:], 2)  # Convertir el segundo operando
+            
+            self.alu.add(sign1, operand1, sign2, operand2)
+            self.pila.pop()
+            self.pila.pop()
+            self.pila.append(self.int_to_binary(int(self.alu.getResult())))
+            
+        elif str(codop) == "00000011":
+            sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
+            sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
+
+            operand1 = sign1 * int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
+            operand2 = sign2 * int(self.pila[1][1:], 2)  # Convertir el segundo operando
+            
+            self.controlUnit.alu.sub(sign1, operand1, sign2, operand2)
+            self.pila.pop()
+            self.pila.pop()
+            self.pila.append(self.int_to_binary(int(self.controlUnit.alu.getResult())))
+        elif str(codop) == "00000100":
+            sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
+            sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
+
+            operand1 = sign1 * int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
+            operand2 = sign2 * int(self.pila[1][1:], 2)  # Convertir el segundo operando
+            
+            self.controlUnit.alu.mul(sign1, operand1, sign2, operand2)
+            self.pila.pop()
+            self.pila.pop()
+            self.pila.append(self.int_to_binary(int(self.controlUnit.alu.getResult())))
+            print(int(self.controlUnit.alu.getResult()))
+        elif str(codop) == "00000101":
+            sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
+            sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
+
+            operand1 = sign1 * int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
+            operand2 = sign2 * int(self.pila[1][1:], 2)  # Convertir el segundo operando
+            
+            self.controlUnit.alu.div(sign1, operand1, sign2, operand2)
+            self.pila.pop()
+            self.pila.pop()
+            self.pila.append(self.int_to_binary(int(self.controlUnit.alu.getResult())))
+        elif str(codop) == "00000110":
+            self.registerBank.addRegister(self.controlUnit.identify_key(operand1), self.pila[0])
+            self.pila.pop()
+        elif str(codop) == "11111111":
+            self.registerBank.PC.setValue("00000000000000000000000000000000")
+        
+        print(self.pila)

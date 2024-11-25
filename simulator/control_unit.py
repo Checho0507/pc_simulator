@@ -193,71 +193,9 @@ class ControlUnit:
 
         # Retornar los campos en un diccionario
         return codop, operand1, operand2
-    
-    def execute(self, codop, operand1, operand2):
-        direction = self.identify_directions(codop)
-        if direction == 0:
-            self.execute_zero(codop, operand1, operand2)
-                
-    def execute_zero(self, codop, operand1, operand2):
-        
-        if str(codop) == "00000001":
-            self.pila.append(operand2)
-        elif str(codop) == "00000010":
-            sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
-            sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
-
-            operand1 = sign1 * int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
-            operand2 = sign2 * int(self.pila[1][1:], 2)  # Convertir el segundo operando
-            
-            self.alu.add(sign1, operand1, sign2, operand2)
-            self.pila.pop()
-            self.pila.pop()
-            self.pila.append(self.int_to_binary(self.alu.getResult()))
-            
-        elif str(codop) == "00000011":
-            sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
-            sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
-
-            operand1 = sign1 * int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
-            operand2 = sign2 * int(self.pila[1][1:], 2)  # Convertir el segundo operando
-            
-            self.alu.sub(sign1, operand1, sign2, operand2)
-            self.pila.pop()
-            self.pila.pop()
-            self.pila.append(self.int_to_binary(self.alu.getResult()))
-        elif str(codop) == "00000100":
-            sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
-            sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
-
-            operand1 = sign1 * int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
-            operand2 = sign2 * int(self.pila[1][1:], 2)  # Convertir el segundo operando
-            
-            self.alu.mul(sign1, operand1, sign2, operand2)
-            self.pila.pop()
-            self.pila.pop()
-            self.pila.append(self.int_to_binary(self.alu.getResult()))
-        elif str(codop) == "00000101":
-            sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
-            sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
-
-            operand1 = sign1 * int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
-            operand2 = sign2 * int(self.pila[1][1:], 2)  # Convertir el segundo operando
-            
-            self.alu.div(sign1, operand1, sign2, operand2)
-            self.pila.pop()
-            self.pila.pop()
-            self.pila.append(self.int_to_binary(self.alu.getResult()))
-        elif str(codop) == "00000110":
-            self.registerBank.addRegister(self.identify_key(operand1), self.pila[0])
-            self.pila.pop()
-        elif str(codop) == "11111111":
-            self.registerBank.PC.setValue("00000000000000000000000000000000")
-        
-        print(self.pila)
             
     def identify_key(self, operand1):
-        for key, value in self.registros_binarios:
+        for key, value in self.registros_binarios.items():
             if operand1 == value:
                 return key
             
@@ -333,7 +271,7 @@ class ControlUnit:
         abs_value = abs(value)
 
         # Convertir el valor absoluto a binario
-        binary_value = f"{abs_value:0{bits-1}b}"  # bits-1 para dejar espacio al bit de signo
+        binary_value = f"{abs_value:0{bits-1}}"  # bits-1 para dejar espacio al bit de signo
 
         # Validar que el valor cabe en el número de bits proporcionado
         if len(binary_value) > (bits - 1):
