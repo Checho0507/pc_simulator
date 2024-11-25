@@ -1,6 +1,5 @@
 from collections import deque
 import time
-from simulator.alu import ALU
 from simulator.bus.address_bus import AddressBus
 from simulator.bus.control_bus import ControlBus
 from simulator.bus.data_bus import DataBus
@@ -34,6 +33,7 @@ class Simulator:
         self.add_asigns(programs[0])
         self.encode_instructions_zero(programs[0])
         self.load_program_zero(programs[0])
+        self.registerBank.PC.setValue("0000000000000000000000000000000")
         
     def add_asigns(self, instructions):
         print("Agregando asignaciones al banco de registros")
@@ -96,6 +96,24 @@ class Simulator:
                 
                 self.controlUnit.alu.add(self.registerBank.PC.getValue(),"1")
                 self.registerBank.PC.setValue(self.int_to_binary(self.controlUnit.alu.getResult(),32))
+    
+    def fetch(self):
+        print("Se inicia el fetch instruction")
+        self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR")
+        self.registerBank.MAR.setValue(self.registerBank.PC.getValue())
+        self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "PC", "MAR")
+        
+        self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "MAR", "MEMORY")
+        data = self.memory.read(int(self.registerBank.PC.getValue(), 2))
+        self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "MAR", "MEMORY")
+        
+        self.memory.dataBus.sendData(data, "MEMORY", "MBR")
+        self.registerBank.MBR.setValue(data)
+        self.memory.dataBus.receiveData(data, "MEMORY", "MBR")
+        
+        self.memory.dataBus.sendData(data, "MBR", "IR")
+        self.registerBank.IR.setValue(data)
+        self.memory.dataBus.receiveData(data, "MBR", "IR")
     
     def int_to_binary(self, value, bits=12):
         """

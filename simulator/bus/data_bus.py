@@ -3,9 +3,10 @@ import time
 
 class DataBus:
     def __init__(self):
-        pass
+        self.data = ""
 
     def sendData(self, data, source, destination):
+        self.data = data
         print(f"DataBus: Sending {data} from {source} to {destination}")
         time.sleep(0)
 

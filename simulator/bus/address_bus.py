@@ -2,9 +2,10 @@ import time
 
 class AddressBus:
     def __init__(self):
-        self.address = 0
+        self.address = ""
 
     def sendAddress(self, address, source, destination):
+        self.address = address
         print(f"AddressBus: Sending {address} from {source} to {destination}")
         time.sleep(0)
 

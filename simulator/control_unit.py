@@ -140,12 +140,12 @@ class ControlUnit:
         print(f"ControlUnit: Executing binary instruction: {binaryInstruction}")
         # Aquí se implementarían las acciones específicas para la instrucción.
 
-    def controlSignal(self):
+    def controlSignal(self, signal):
         """
         Genera señales de control para coordinar los buses.
         """
         print("ControlUnit: Generating control signals")
-        self.controlBus.sendControlSignal("FETCH")
+        self.controlBus.sendControlSignal(signal)
         
     def encode_zero_address_instruction(self, instruction, operand, pila):
         """

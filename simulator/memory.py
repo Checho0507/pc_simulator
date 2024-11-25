@@ -9,9 +9,7 @@ class Memory:
 
     def read(self, address):
         if 0 <= address < self.size:
-            self.addressBus.sendAddress("Memory", address)
             data = self.memoryArray[address]
-            self.dataBus.sendData("Memory", data)
             return data
         else:
             raise ValueError("Memory: Address out of range")
