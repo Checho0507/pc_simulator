@@ -3,7 +3,7 @@ import time
 
 class DataBus:
     def __init__(self):
-        self.data = ""
+        self.data = "00000000000000000000000000000000"
         
     def getData(self):
         return self.data

@@ -2,7 +2,7 @@ import time
 
 class AddressBus:
     def __init__(self):
-        self.address = ""
+        self.address = "00000000000000000000000000000000"
     
     def getAddress(self):
         return self.address

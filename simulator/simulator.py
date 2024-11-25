@@ -1,5 +1,6 @@
-from collections import deque
+import streamlit as st
 import time
+from collections import deque
 from simulator.bus.address_bus import AddressBus
 from simulator.bus.control_bus import ControlBus
 from simulator.bus.data_bus import DataBus
@@ -20,23 +21,14 @@ class Simulator:
         self.memory = Memory(64, self.dataBus, self.addressBus)
         self.controlUnit = ControlUnit(self.dataBus, self.addressBus, self.controlBus, self.registerBank, self.memory)
 
-    def executeProgram(self):
-        # Ejemplo de programa para instrucciones de cero direcciones
-        programs = {
-            0:[
-            "A = -1", "C = 2", "D = 3", "E = 4", "PUSH D", "PUSH E", 
-            "SUB", "PUSH A", "MUL", "POP X", "PUSH A", "PUSH C", 
-            "MUL", "PUSH X", "DIV", "POP Z", "END"
-            ]
-        }
-
+    def executeProgram(self, programs):
         print("Loading zero-address instructions:")
-        count = self.add_asigns(programs[0])
-        self.encode_instructions_zero(programs[0])
-        self.load_program_zero(programs[0])
+        count = self.add_asigns(programs)
+        self.encode_instructions_zero(programs)
+        self.load_program_zero(programs)
         self.registerBank.PC.setValue("00000000000000000000000000000000")
         self.pila.clear()
-        for i in range(len(programs[0])-count):
+        for i in range(len(programs)-count):
             self.controlBus.sendControlSignal("FETCH")
             self.controlUnit.fetch()
             self.controlBus.receiveControlSignal()
@@ -190,10 +182,10 @@ class Simulator:
             operand01 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
             operand02 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
             
-            self.alu.add(sign1, operand01, sign2, operand02)
+            self.controlUnit.alu.add(sign1, operand01, sign2, operand02)
             self.pila.pop()
             self.pila.pop()
-            self.pila.append(self.int_to_binary(int(self.alu.getResult())))
+            self.pila.append(self.int_to_binary(int(self.controlUnit.alu.getResult())))
             
             self.memory.dataBus.sendData(codop+operand1+self.pila[0][1:], "ALU", "REGISTER BANK")
             self.memory.dataBus.receiveData(codop+operand1+self.pila[0][1:], "ALU", "REGISTER BANK")

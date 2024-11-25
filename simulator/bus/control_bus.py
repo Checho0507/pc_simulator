@@ -2,7 +2,10 @@ import time
 
 class ControlBus:
     def __init__(self):
-        self.controlSignals = ""
+        self.controlSignal = "00000000000000000000000000000000"
+        
+    def getControlSignal(self):
+        return self.controlSignal
 
     def sendControlSignal(self, signal):
         self.controlSignals = signal

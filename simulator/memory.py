@@ -2,7 +2,7 @@ import time
 
 class Memory:
     def __init__(self, size, dataBus, addressBus):
-        self.memoryArray = [0] * size
+        self.memoryArray = ["00000000000000000000000000000000"] * size
         self.size = size
         self.dataBus = dataBus
         self.addressBus = addressBus
