@@ -81,18 +81,20 @@ class Simulator:
                     operands = None
                 encoded = self.controlUnit.encode_zero_address_instruction(operation, operands, self.pila)
                 self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR")
-                self.registerBank.MAR.setValue(self.registerBank.PC.getValue())
+                self.registerBank.MAR.setValue(self.memory.addressBus.address)
                 self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "PC", "MAR")
                 
                 self.memory.addressBus.sendAddress(encoded, "CONTROL UNIT", "MBR")
-                self.registerBank.MBR.setValue(encoded)
+                self.registerBank.MBR.setValue(self.memory.addressBus.address)
                 self.memory.dataBus.receiveData(encoded, "CONTROL UNIT", "MBR")
                 
                 self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "MAR", "MEMORY")
+                MAR = self.memory.addressBus.address
                 self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "MAR", "MEMORY")
                 self.memory.dataBus.sendData(encoded, "MBR", "MEMORY")
+                MBR = self.memory.addressBus.address
                 self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "MBR", "MEMORY")
-                self.memory.write(int(self.registerBank.MAR.getValue(), 2), self.registerBank.MBR.getValue())
+                self.memory.write(int(MAR, 2), MBR)
                 
                 self.controlUnit.alu.add(self.registerBank.PC.getValue(),"1")
                 self.registerBank.PC.setValue(self.int_to_binary(self.controlUnit.alu.getResult(),32))
@@ -100,20 +102,20 @@ class Simulator:
     def fetch(self):
         print("Se inicia el fetch instruction")
         self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR")
-        self.registerBank.MAR.setValue(self.registerBank.PC.getValue())
+        self.registerBank.MAR.setValue(self.memory.addressBus.address)
         self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "PC", "MAR")
         
-        self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "MAR", "MEMORY")
-        data = self.memory.read(int(self.registerBank.PC.getValue(), 2))
-        self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "MAR", "MEMORY")
+        self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
+        data = self.memory.read(int(self.memory.addressBus.address, 2))
+        self.memory.addressBus.receiveAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
         
         self.memory.dataBus.sendData(data, "MEMORY", "MBR")
-        self.registerBank.MBR.setValue(data)
+        self.registerBank.MBR.setValue(self.memory.dataBus.data)
         self.memory.dataBus.receiveData(data, "MEMORY", "MBR")
         
-        self.memory.dataBus.sendData(data, "MBR", "IR")
-        self.registerBank.IR.setValue(data)
-        self.memory.dataBus.receiveData(data, "MBR", "IR")
+        self.memory.dataBus.sendData(self.registerBank.MBR.getValue(), "MBR", "IR")
+        self.registerBank.IR.setValue(self.memory.dataBus.data)
+        self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "IR")
     
     def int_to_binary(self, value, bits=12):
         """
