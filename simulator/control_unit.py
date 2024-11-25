@@ -1,10 +1,15 @@
+from simulator.alu import ALU
+
+
 class ControlUnit:
-    def __init__(self, dataBus, addressBus, controlBus):
+    def __init__(self, dataBus, addressBus, controlBus, registerBank):
         self.instructionRegister = ""  # Registro de instrucción
         self.programCounter = 0  # Contador de programa
         self.dataBus = dataBus
         self.addressBus = addressBus
         self.controlBus = controlBus
+        self.registerBank = registerBank
+        self.alu = ALU()
 
         # Diccionarios para instrucciones
         self.instrucciones_binarias_cero = {
@@ -95,11 +100,7 @@ class ControlUnit:
             'W': '000000010111',
             'X': '000000011000',
             'Y': '000000011001',
-            'Z': '000000011010',
-            'PC': '1000000010000000',
-            'IR': '0100000001000000',
-            'MAR': '1100000011000000',
-            'MBR': '0010000000100000'
+            'Z': '000000011010'
         }
 
     def decodeInstruction(self, instruction):
@@ -145,3 +146,33 @@ class ControlUnit:
         """
         print("ControlUnit: Generating control signals")
         self.controlBus.sendControlSignal("FETCH")
+        
+    def encode_zero_address_instruction(self, instruction, operand, pila):
+        """
+        Codifica una instrucción de cero direcciones:
+        - 8 bits para el codop
+        - 1 bit y 11 bits para cada operando (pueden ser 0 si no se usan)
+        """
+        codop = self.instrucciones_binarias_cero.get(instruction, "00000000")
+        operands_binary = ""
+
+        if operand in self.registros_binarios_cero:  # Es un registro
+            reg_binary = self.registros_binarios_cero[operand]
+            operands_binary += reg_binary
+        else:  # Es un valor numérico
+            if operand != None:
+                sign_bit = '0' if int(operand) >= 0 else '1'
+                value_binary = f"{abs(int(operand)):011b}"
+                operands_binary += sign_bit + value_binary
+        if operand != None:
+            while len(operands_binary) < 23:  # Asegurar 23 bits para los tres operandos
+                try: 
+                    operands_binary += self.registerBank.getRegister(operand)
+                    pila.append(self.registerBank.getRegister(operand))
+                except:
+                    self.registerBank.addRegister(operand, "000000000000")
+        else:
+            operands_binary = pila[0]+pila[-1]
+
+        return codop + operands_binary[:24]
+

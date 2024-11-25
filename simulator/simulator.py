@@ -1,13 +1,12 @@
+from collections import deque
+import time
 from simulator.alu import ALU
 from simulator.bus.address_bus import AddressBus
 from simulator.bus.control_bus import ControlBus
 from simulator.bus.data_bus import DataBus
 from simulator.control_unit import ControlUnit
 from simulator.memory import Memory
-from simulator.memory_manager import MemoryManager
 from simulator.register_bank import RegisterBank
-from simulator.registers import Register
-
 
 class Simulator:
     def __init__(self):
@@ -17,27 +16,11 @@ class Simulator:
         self.controlBus = ControlBus()
 
         # Crear componentes principales
-        self.controlUnit = ControlUnit(self.dataBus, self.addressBus, self.controlBus)
-        self.memory = Memory(256, self.dataBus, self.addressBus)
-        self.alu = ALU()
         self.registerBank = RegisterBank()
-
-        # Inicializar registros
-        self.registerBank.addRegister("PC", Register())
-        self.registerBank.addRegister("IR", Register())
-        self.registerBank.addRegister("MAR", Register())
-        self.registerBank.addRegister("MBR", Register())
+        self.controlUnit = ControlUnit(self.dataBus, self.addressBus, self.controlBus, self.registerBank)
+        self.memory = Memory(1024, self.dataBus, self.addressBus)
 
     def executeProgram(self):
-        # Crear buses y componentes principales
-        dataBus = DataBus()
-        addressBus = AddressBus()
-        controlBus = ControlBus()
-        controlUnit = ControlUnit(dataBus, addressBus, controlBus)
-        memory = Memory(256, dataBus, addressBus)
-        registerBank = RegisterBank()
-        memoryManager = MemoryManager(controlUnit, memory, registerBank)
-
         # Ejemplo de programa para instrucciones de cero direcciones
         program_zero = [
             "A = -1", "C = 2", "D = 3", "E = 4", "PUSH D", "PUSH E", 
@@ -46,4 +29,111 @@ class Simulator:
         ]
 
         print("Loading zero-address instructions:")
-        memoryManager.load_program(program_zero)
+        self.load_program(program_zero)
+        
+    def load_program(self, instructions):
+        """
+        Procesa y carga las instrucciones y asignaciones en memoria.
+        """
+        
+        print("Agregando asignaciones al banco de registros")
+        time.sleep(2)
+        for instr in instructions:
+            if "=" in instr:  # Asignación al banco de registros
+                var, val = instr.split(" = ")
+                value = int(val.strip())
+                encoded = self.encode_assignment(var.strip(), value)
+                print(f"Encoded assignment {instr}: {encoded}")
+                encoded_val = self.int_to_binary(value)
+                self.registerBank.addRegister(var, encoded_val)  # Guardar en el banco de registros
+                time.sleep(2)
+                
+        print("Decodificando instrucción a nivel máquina:")
+        # Crear una pila para las instrucciones de cero direcciones
+        self.pila = deque()
+        for instr in instructions:
+            if "=" not in instr:  # Instrucciones a memoria
+                parts = instr.split()
+                operation = parts[0]
+                if len(parts) > 1:
+                    operands = parts[1]  # Operandos como strings
+                else:
+                    operands = None
+                encoded = self.controlUnit.encode_zero_address_instruction(operation, operands, self.pila)
+                print(f"Encoded instruction {instr}: {encoded}")
+                time.sleep(2)
+        
+        print("Cargando el programa a la memoria:")
+        time.sleep(2)
+        for instr in instructions:
+            if "=" not in instr:  # Instrucciones a memoria
+                parts = instr.split()
+                operation = parts[0]
+                if len(parts) > 1:
+                    operands = parts[1]  # Operandos como strings
+                else:
+                    operands = None
+                encoded = self.controlUnit.encode_zero_address_instruction(operation, operands, self.pila)
+                self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR")
+                self.registerBank.MAR.setValue(self.registerBank.PC.getValue())
+                self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "PC", "MAR")
+                
+                self.memory.addressBus.sendAddress(encoded, "CONTROL UNIT", "MBR")
+                self.registerBank.MBR.setValue(encoded)
+                self.memory.dataBus.receiveData(encoded, "CONTROL UNIT", "MBR")
+                
+                self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "MAR", "MEMORY")
+                self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "MAR", "MEMORY")
+                self.memory.dataBus.sendData(encoded, "MBR", "MEMORY")
+                self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "MBR", "MEMORY")
+                self.memory.write(int(self.registerBank.MAR.getValue(), 2), self.registerBank.MBR.getValue())
+                
+                self.controlUnit.alu.add(self.registerBank.PC.getValue(),"1")
+                self.registerBank.PC.setValue(self.int_to_binary(self.controlUnit.alu.getResult(),32))
+    
+    def int_to_binary(self, value, bits=12):
+        """
+        Convierte un entero a su representación binaria con bit de signo.
+        
+        Parámetros:
+        - value: El número entero a convertir.
+        - bits: Número total de bits (incluido el bit de signo).
+        
+        Retorna:
+        - Cadena binaria con la longitud especificada.
+        
+        Ejemplo:
+        - int_to_binary(5, 12) -> '000000000101'  (Positivo)
+        - int_to_binary(-5, 12) -> '100000000101' (Negativo)
+        """
+        if bits < 2:
+            raise ValueError("La cantidad de bits debe ser al menos 2 para incluir el bit de signo.")
+
+        # Determinar el signo y convertir el valor absoluto a binario
+        sign_bit = '0' if value >= 0 else '1'
+        abs_value = abs(value)
+
+        # Convertir el valor absoluto a binario
+        binary_value = f"{abs_value:0{bits-1}b}"  # bits-1 para dejar espacio al bit de signo
+
+        # Validar que el valor cabe en el número de bits proporcionado
+        if len(binary_value) > (bits - 1):
+            raise ValueError(f"El valor {value} excede el rango permitido para {bits} bits.")
+
+        # Combinar el bit de signo y el valor binario
+        return sign_bit + binary_value
+
+    def encode_assignment(self, variable, value):
+        """
+        Codifica una asignación en formato binario:
+        - 8 bits para el codop (asignación)
+        - 12 bits para la letra del registro
+        - 1 bit para el signo
+        - 11 bits para el número
+        """
+        codop = self.controlUnit.asignaciones.get(variable + " = ", "00000000")
+        sign_bit = '0' if value >= 0 else '1'
+        value_binary = f"{abs(value):011b}"
+        return codop + self.controlUnit.registros_binarios_cero[variable] + sign_bit + value_binary
+
+    

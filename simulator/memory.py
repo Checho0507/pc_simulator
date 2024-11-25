@@ -15,9 +15,8 @@ class Memory:
             raise ValueError("Memory: Address out of range")
 
     def write(self, address, data):
+        print(f"Escribiendo {data} en la dirección de memoria {address}")
         if 0 <= address < self.size:
-            self.addressBus.sendAddress("Memory", address)
             self.memoryArray[address] = data
-            self.dataBus.sendData("Memory", data)
         else:
             raise ValueError("Memory: Address out of range")

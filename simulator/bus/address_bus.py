@@ -1,9 +1,13 @@
+import time
+
 class AddressBus:
     def __init__(self):
         self.address = 0
 
-    def sendAddress(self, source, destination):
-        print(f"AddressBus: Sending address from {source} to {destination}")
+    def sendAddress(self, address, source, destination):
+        print(f"AddressBus: Sending {address} from {source} to {destination}")
+        time.sleep(2)
 
-    def receiveAddress(self, source):
-        print(f"AddressBus: Receiving address from {source}")
+    def receiveAddress(self, address, source, destination):
+        print(f"AddressBus: {destination} is receiving {address} from {source}")
+        time.sleep(2)
