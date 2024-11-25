@@ -16,7 +16,7 @@ class Simulator:
 
         # Crear componentes principales
         self.registerBank = RegisterBank()
-        self.controlUnit = ControlUnit(self.dataBus, self.addressBus, self.controlBus, self.registerBank)
+        self.controlUnit = ControlUnit(self.dataBus, self.addressBus, self.controlBus, self.registerBank, self.memory)
         self.memory = Memory(1024, self.dataBus, self.addressBus)
 
     def executeProgram(self):
@@ -98,24 +98,6 @@ class Simulator:
                 
                 self.controlUnit.alu.add(self.registerBank.PC.getValue(),"1")
                 self.registerBank.PC.setValue(self.int_to_binary(self.controlUnit.alu.getResult(),32))
-    
-    def fetch(self):
-        print("Se inicia el fetch instruction")
-        self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR")
-        self.registerBank.MAR.setValue(self.memory.addressBus.address)
-        self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "PC", "MAR")
-        
-        self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
-        data = self.memory.read(int(self.memory.addressBus.address, 2))
-        self.memory.addressBus.receiveAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
-        
-        self.memory.dataBus.sendData(data, "MEMORY", "MBR")
-        self.registerBank.MBR.setValue(self.memory.dataBus.data)
-        self.memory.dataBus.receiveData(data, "MEMORY", "MBR")
-        
-        self.memory.dataBus.sendData(self.registerBank.MBR.getValue(), "MBR", "IR")
-        self.registerBank.IR.setValue(self.memory.dataBus.data)
-        self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "IR")
     
     def int_to_binary(self, value, bits=12):
         """

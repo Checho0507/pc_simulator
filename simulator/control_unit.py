@@ -1,15 +1,13 @@
 from simulator.alu import ALU
 
-
 class ControlUnit:
-    def __init__(self, dataBus, addressBus, controlBus, registerBank):
-        self.instructionRegister = ""  # Registro de instrucción
-        self.programCounter = 0  # Contador de programa
+    def __init__(self, dataBus, addressBus, controlBus, registerBank, memory):
+        self.alu = ALU()
         self.dataBus = dataBus
         self.addressBus = addressBus
         self.controlBus = controlBus
         self.registerBank = registerBank
-        self.alu = ALU()
+        self.memory = memory
 
         # Diccionarios para instrucciones
         self.instrucciones_binarias_cero = {
@@ -146,6 +144,24 @@ class ControlUnit:
         """
         print("ControlUnit: Generating control signals")
         self.controlBus.sendControlSignal(signal)
+        
+    def fetch(self):
+        print("Se inicia el fetch instruction")
+        self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR")
+        self.registerBank.MAR.setValue(self.memory.addressBus.address)
+        self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "PC", "MAR")
+        
+        self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
+        data = self.memory.read(int(self.memory.addressBus.address, 2))
+        self.memory.addressBus.receiveAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
+        
+        self.memory.dataBus.sendData(data, "MEMORY", "MBR")
+        self.registerBank.MBR.setValue(self.memory.dataBus.data)
+        self.memory.dataBus.receiveData(data, "MEMORY", "MBR")
+        
+        self.memory.dataBus.sendData(self.registerBank.MBR.getValue(), "MBR", "IR")
+        self.registerBank.IR.setValue(self.memory.dataBus.data)
+        self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "IR")
         
     def encode_zero_address_instruction(self, instruction, operand, pila):
         """
