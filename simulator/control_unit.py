@@ -163,18 +163,33 @@ class ControlUnit:
         self.registerBank.IR.setValue(self.memory.dataBus.data)
         self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "IR")
         
-    def decode(self):   
+    def decode(self):
+        """
+        Decodifica la instrucción almacenada en el IR (Instruction Register).
+        """
+        # Obtener el valor del IR (Instruction Register)
         IR = self.registerBank.IR.getValue()
-        codop = ""
-        operand1 = ""
-        operand2 = ""
-        for bit in IR.split():
-            if len(codop) < 8:
-                codop += bit
-            if len(codop) == 8 and operand2 == "":
-                operand1 += bit
-            if len(operand1) == 12:
-                operand2 += bit
+
+        # Verificar que el IR tenga 32 bits
+        if len(IR) != 32:
+            raise ValueError(f"Instrucción inválida en IR: {IR}. Se esperaban 32 bits.")
+
+        # Extraer los campos de la instrucción
+        codop = IR[:8]          # Los primeros 8 bits son el código de operación
+        operand1 = IR[8:20]     # Los siguientes 12 bits son el primer operando
+        operand2 = IR[20:32]    # Los últimos 12 bits son el segundo operando
+
+        # Imprimir los valores extraídos (solo para depuración)
+        print(f"Codop: {codop}")
+        print(f"Operand1: {operand1}")
+        print(f"Operand2: {operand2}")
+
+        # Retornar los campos en un diccionario
+        return {
+            "codop": codop,
+            "operand1": operand1,
+            "operand2": operand2
+        }
             
     def encode_zero_address_instruction(self, instruction, operand, pila):
         """

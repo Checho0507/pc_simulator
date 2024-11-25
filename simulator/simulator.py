@@ -37,10 +37,12 @@ class Simulator:
         self.controlBus.sendControlSignal("FETCH")
         self.controlUnit.fetch()
         self.controlBus.receiveControlSignal()
+        self.controlBus.sendControlSignal("DECODE")
+        self.controlUnit.decode()
+        self.controlBus.sendControlSignal("DECODE")
         
     def add_asigns(self, instructions):
         print("Agregando asignaciones al banco de registros")
-        time.sleep(2)
         for instr in instructions:
             if "=" in instr:  # Asignación al banco de registros
                 var, val = instr.split(" = ")
@@ -65,7 +67,6 @@ class Simulator:
                     operands = None
                 encoded = self.controlUnit.encode_zero_address_instruction(operation, operands, self.pila)
                 print(f"Encoded instruction {instr}: {encoded}")
-                time.sleep(2)
         
     def load_program_zero(self, instructions):
         """
@@ -73,7 +74,6 @@ class Simulator:
         """
         
         print("Cargando el programa a la memoria:")
-        time.sleep(2)
         for instr in instructions:
             if "=" not in instr:  # Instrucciones a memoria
                 parts = instr.split()
