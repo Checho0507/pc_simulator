@@ -25,7 +25,7 @@ class Simulator:
             0:[
             "A = -1", "C = 2", "D = 3", "E = 4", "PUSH D", "PUSH E", 
             "SUB", "PUSH A", "MUL", "POP X", "PUSH A", "PUSH C", 
-            "MUL", "PUSH X", "DIV", "POP Z"
+            "MUL", "PUSH X", "DIV", "POP Z", "END"
             ]
         }
 
@@ -39,7 +39,7 @@ class Simulator:
         self.controlBus.receiveControlSignal()
         self.controlBus.sendControlSignal("DECODE")
         self.controlUnit.decode()
-        self.controlBus.sendControlSignal("DECODE")
+        self.controlBus.receiveControlSignal()
         
     def add_asigns(self, instructions):
         print("Agregando asignaciones al banco de registros")

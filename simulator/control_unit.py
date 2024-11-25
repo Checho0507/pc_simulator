@@ -17,6 +17,7 @@ class ControlUnit:
             'MUL': '00000100',
             'DIV': '00000101',
             'POP': '00000110',
+            'END': '11111111'
         }
 
         self.instrucciones_binarias_una = {
@@ -26,6 +27,7 @@ class ControlUnit:
             'MUL': '00001010',
             'DIV': '00001011',
             'STORE': '00001100',
+            'END': '11111111'
         }
 
         self.instrucciones_binarias_dos = {
@@ -34,6 +36,7 @@ class ControlUnit:
             'SUB': '00001111',
             'MUL': '00010000',
             'DIV': '00010001',
+            'END': '11111111'
         }
 
         self.instrucciones_binarias_tres = {
@@ -41,6 +44,7 @@ class ControlUnit:
             'SUB': '00010011',
             'MUL': '00010100',
             'DIV': '00010101',
+            'END': '11111111'
         }
 
         self.asignaciones = {
