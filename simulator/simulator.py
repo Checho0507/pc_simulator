@@ -33,13 +33,19 @@ class Simulator:
         self.add_asigns(programs[0])
         self.encode_instructions_zero(programs[0])
         self.load_program_zero(programs[0])
-        self.registerBank.PC.setValue("0000000000000000000000000000000")
-        self.controlBus.sendControlSignal("FETCH")
-        self.controlUnit.fetch()
-        self.controlBus.receiveControlSignal()
-        self.controlBus.sendControlSignal("DECODE")
-        self.controlUnit.decode()
-        self.controlBus.receiveControlSignal()
+        self.registerBank.PC.setValue("00000000000000000000000000000000")
+        while self.registerBank.PC.getValue() != "11111111111111111111111111111111":
+            self.controlBus.sendControlSignal("FETCH")
+            self.controlUnit.fetch()
+            self.controlBus.receiveControlSignal()
+            self.controlBus.sendControlSignal("DECODE")
+            codop, operand1, operand2 = self.controlUnit.decode()
+            self.controlBus.receiveControlSignal()
+            self.controlUnit.alu.add(self.registerBank.PC.getValue(),"1")
+            self.registerBank.PC.setValue(self.int_to_binary(self.controlUnit.alu.getResult(),32))
+            
+            if codop == "11111111":
+                self.registerBank.PC.setValue("11111111111111111111111111111111")
         
     def add_asigns(self, instructions):
         print("Agregando asignaciones al banco de registros")

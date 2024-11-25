@@ -156,7 +156,7 @@ class ControlUnit:
         self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "PC", "MAR")
         
         self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
-        data = self.memory.read(int(self.memory.addressBus.address, 2))
+        data = self.memory.read(int(self.memory.addressBus.getAddress(), 2))
         self.memory.addressBus.receiveAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
         
         self.memory.dataBus.sendData(data, "MEMORY", "MBR")
@@ -189,11 +189,7 @@ class ControlUnit:
         print(f"Operand2: {operand2}")
 
         # Retornar los campos en un diccionario
-        return {
-            "codop": codop,
-            "operand1": operand1,
-            "operand2": operand2
-        }
+        return codop, operand1, operand2
             
     def encode_zero_address_instruction(self, instruction, operand, pila):
         """
