@@ -16,8 +16,8 @@ class Simulator:
 
         # Crear componentes principales
         self.registerBank = RegisterBank()
-        self.controlUnit = ControlUnit(self.dataBus, self.addressBus, self.controlBus, self.registerBank, self.memory)
         self.memory = Memory(1024, self.dataBus, self.addressBus)
+        self.controlUnit = ControlUnit(self.dataBus, self.addressBus, self.controlBus, self.registerBank, self.memory)
 
     def executeProgram(self):
         # Ejemplo de programa para instrucciones de cero direcciones
@@ -34,6 +34,9 @@ class Simulator:
         self.encode_instructions_zero(programs[0])
         self.load_program_zero(programs[0])
         self.registerBank.PC.setValue("0000000000000000000000000000000")
+        self.controlBus.sendControlSignal("FETCH")
+        self.controlUnit.fetch()
+        self.controlBus.receiveControlSignal()
         
     def add_asigns(self, instructions):
         print("Agregando asignaciones al banco de registros")
@@ -81,19 +84,21 @@ class Simulator:
                     operands = None
                 encoded = self.controlUnit.encode_zero_address_instruction(operation, operands, self.pila)
                 self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR")
-                self.registerBank.MAR.setValue(self.memory.addressBus.address)
-                self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "PC", "MAR")
+                self.registerBank.MAR.setValue(self.memory.addressBus.getAddress())
+                self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "PC", "MAR")
                 
-                self.memory.addressBus.sendAddress(encoded, "CONTROL UNIT", "MBR")
-                self.registerBank.MBR.setValue(self.memory.addressBus.address)
+                self.memory.dataBus.sendData(encoded, "CONTROL UNIT", "MBR")
+                self.registerBank.MBR.setValue(self.memory.dataBus.getData())
                 self.memory.dataBus.receiveData(encoded, "CONTROL UNIT", "MBR")
                 
-                self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "MAR", "MEMORY")
-                MAR = self.memory.addressBus.address
-                self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "MAR", "MEMORY")
-                self.memory.dataBus.sendData(encoded, "MBR", "MEMORY")
-                MBR = self.memory.addressBus.address
-                self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "MBR", "MEMORY")
+                self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
+                MAR = self.memory.addressBus.getAddress()
+                self.memory.addressBus.receiveAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
+                
+                self.memory.dataBus.sendData(self.registerBank.MBR.getValue(), "MBR", "MEMORY")
+                MBR = self.memory.dataBus.getData()
+                self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "MEMORY")
+                
                 self.memory.write(int(MAR, 2), MBR)
                 
                 self.controlUnit.alu.add(self.registerBank.PC.getValue(),"1")

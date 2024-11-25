@@ -4,6 +4,9 @@ import time
 class DataBus:
     def __init__(self):
         self.data = ""
+        
+    def getData(self):
+        return self.data
 
     def sendData(self, data, source, destination):
         self.data = data

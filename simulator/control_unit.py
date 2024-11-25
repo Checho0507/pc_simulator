@@ -146,10 +146,10 @@ class ControlUnit:
         self.controlBus.sendControlSignal(signal)
         
     def fetch(self):
-        print("Se inicia el fetch instruction")
+        print("Se inicia el fetch instruction:")
         self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR")
-        self.registerBank.MAR.setValue(self.memory.addressBus.address)
-        self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "PC", "MAR")
+        self.registerBank.MAR.setValue(self.memory.addressBus.getAddress())
+        self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "PC", "MAR")
         
         self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
         data = self.memory.read(int(self.memory.addressBus.address, 2))
@@ -163,6 +163,19 @@ class ControlUnit:
         self.registerBank.IR.setValue(self.memory.dataBus.data)
         self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "IR")
         
+    def decode(self):   
+        IR = self.registerBank.IR.getValue()
+        codop = ""
+        operand1 = ""
+        operand2 = ""
+        for bit in IR.split():
+            if len(codop) < 8:
+                codop += bit
+            if len(codop) == 8 and operand2 == "":
+                operand1 += bit
+            if len(operand1) == 12:
+                operand2 += bit
+            
     def encode_zero_address_instruction(self, instruction, operand, pila):
         """
         Codifica una instrucción de cero direcciones:

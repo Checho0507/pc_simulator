@@ -10,9 +10,5 @@ class ControlBus:
         time.sleep(0)
 
     def receiveControlSignal(self):
-        if self.controlSignals:
-            signal = self.controlSignals.pop(0)
-            print(f"ControlBus: Receiving control signal '{signal}'")
-            time.sleep(0)
-            return signal
-        return None
+        print(f"ControlBus: Receiving control signal '{self.controlSignals}'")
+        time.sleep(0)

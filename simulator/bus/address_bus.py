@@ -3,6 +3,9 @@ import time
 class AddressBus:
     def __init__(self):
         self.address = ""
+    
+    def getAddress(self):
+        return self.address
 
     def sendAddress(self, address, source, destination):
         self.address = address
