@@ -154,6 +154,7 @@ class ControlUnit:
         
     def fetch(self):
         print("Se inicia el fetch instruction:")
+        
         self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR")
         self.registerBank.MAR.setValue(self.memory.addressBus.getAddress())
         self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "PC", "MAR")
@@ -167,7 +168,7 @@ class ControlUnit:
         self.memory.dataBus.receiveData(data, "MEMORY", "MBR")
         
         self.memory.dataBus.sendData(self.registerBank.MBR.getValue(), "MBR", "IR")
-        self.registerBank.IR.setValue(self.memory.dataBus.data)
+        self.registerBank.IR.setValue(self.memory.dataBus.getData())
         self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "IR")
         
     def decode(self):
@@ -237,7 +238,7 @@ class ControlUnit:
                 value_binary = f"{abs(int(operand)):011b}"
                 operands_binary += sign_bit + value_binary
         if operand != None:
-            while len(operands_binary) < 23:  # Asegurar 23 bits para los tres operandos
+            while len(operands_binary) < 24:  # Asegurar 23 bits para los tres operandos
                 try: 
                     operands_binary += self.registerBank.getRegister(operand)
                     pila.append(self.registerBank.getRegister(operand))

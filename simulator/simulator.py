@@ -102,10 +102,16 @@ class Simulator:
                 self.registerBank.MAR.setValue(self.memory.addressBus.getAddress())
                 self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "PC", "MAR")
                 
-                self.memory.dataBus.sendData(encoded, "CONTROL UNIT", "MBR")
-                self.registerBank.MBR.setValue(self.memory.dataBus.getData())
-                self.memory.dataBus.receiveData(encoded, "CONTROL UNIT", "MBR")
-                
+                if parts[0] == "PUSH":
+                    if self.registerBank.getRegister(parts[1]):
+                        self.memory.dataBus.sendData(encoded, "REGISTER", "MBR")
+                        self.registerBank.MBR.setValue(self.memory.dataBus.getData())
+                        self.memory.dataBus.receiveData(encoded, "CONTROL UNIT", "MBR")
+                else:
+                    self.memory.dataBus.sendData(encoded, "CONTROL UNIT", "MBR")
+                    self.registerBank.MBR.setValue(self.memory.dataBus.getData())
+                    self.memory.dataBus.receiveData(encoded, "CONTROL UNIT", "MBR")
+                    
                 self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
                 MAR = self.memory.addressBus.getAddress()
                 self.memory.addressBus.receiveAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
@@ -139,7 +145,7 @@ class Simulator:
 
         # Determinar el signo y convertir el valor absoluto a binario
         sign_bit = '0' if value >= 0 else '1'
-        abs_value = abs(value)
+        abs_value = abs(int(value))
 
         # Convertir el valor absoluto a binario
         binary_value = f"{abs_value:0{bits-1}b}"  # bits-1 para dejar espacio al bit de signo
@@ -172,13 +178,15 @@ class Simulator:
     def execute_zero(self, codop, operand1, operand2):
         
         if str(codop) == "00000001":
-            self.pila.append(operand2)
+            for key, value in self.controlUnit.registros_binarios.items():
+                if value == operand1:
+                    self.pila.append(self.registerBank.getRegister(key))
         elif str(codop) == "00000010":
             sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
             sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
 
-            operand1 = sign1 * int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
-            operand2 = sign2 * int(self.pila[1][1:], 2)  # Convertir el segundo operando
+            operand1 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
+            operand2 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
             
             self.alu.add(sign1, operand1, sign2, operand2)
             self.pila.pop()
@@ -189,8 +197,8 @@ class Simulator:
             sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
             sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
 
-            operand1 = sign1 * int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
-            operand2 = sign2 * int(self.pila[1][1:], 2)  # Convertir el segundo operando
+            operand1 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
+            operand2 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
             
             self.controlUnit.alu.sub(sign1, operand1, sign2, operand2)
             self.pila.pop()
@@ -200,8 +208,8 @@ class Simulator:
             sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
             sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
 
-            operand1 = sign1 * int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
-            operand2 = sign2 * int(self.pila[1][1:], 2)  # Convertir el segundo operando
+            operand1 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
+            operand2 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
             
             self.controlUnit.alu.mul(sign1, operand1, sign2, operand2)
             self.pila.pop()
@@ -212,8 +220,8 @@ class Simulator:
             sign1 = -1 if self.pila[0][0] == '1' else 1  # Determinar el signo del primer operando
             sign2 = -1 if self.pila[1][0] == '1' else 1  # Determinar el signo del segundo operando
 
-            operand1 = sign1 * int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
-            operand2 = sign2 * int(self.pila[1][1:], 2)  # Convertir el segundo operando
+            operand1 = int(self.pila[0][1:], 2)  # Convertir el valor binario (sin bit de signo) a entero
+            operand2 = int(self.pila[1][1:], 2)  # Convertir el segundo operando
             
             self.controlUnit.alu.div(sign1, operand1, sign2, operand2)
             self.pila.pop()
@@ -221,8 +229,51 @@ class Simulator:
             self.pila.append(self.int_to_binary(int(self.controlUnit.alu.getResult())))
         elif str(codop) == "00000110":
             self.registerBank.addRegister(self.controlUnit.identify_key(operand1), self.pila[0])
+            print(self.registerBank.getRegister(self.controlUnit.identify_key(operand1)))
             self.pila.pop()
         elif str(codop) == "11111111":
             self.registerBank.PC.setValue("00000000000000000000000000000000")
         
         print(self.pila)
+        
+    def float_a_binario_12bits(self, numero):
+        """
+        Convierte un número float a una representación binaria de 12 bits con signo.
+        
+        :param numero: Número float a convertir.
+        :return: Cadena binaria de 12 bits.
+        :raises ValueError: Si el número no puede representarse en 12 bits.
+        """
+        if numero < -2 or numero >= 2:
+            raise ValueError(f"El número {numero} no puede representarse en 12 bits con esta lógica.")
+
+        # Determinar el bit de signo
+        signo = '1' if numero < 0 else '0'
+        numero = abs(numero)
+
+        # Separar parte entera y fraccionaria
+        parte_entera = int(numero)
+        parte_fraccionaria = numero - parte_entera
+
+        # Convertir parte entera a binario
+        bin_entera = bin(parte_entera)[2:]  # Quitar el prefijo '0b'
+
+        # Convertir parte fraccionaria a binario (hasta completar 11 bits totales)
+        bin_fraccionaria = ""
+        while parte_fraccionaria > 0 and len(bin_entera + bin_fraccionaria) < 11:
+            parte_fraccionaria *= 2
+            bit = int(parte_fraccionaria)
+            bin_fraccionaria += str(bit)
+            parte_fraccionaria -= bit
+
+        # Combinar parte entera y fraccionaria
+        binario = bin_entera + bin_fraccionaria
+
+        # Ajustar a 11 bits (completa con ceros si es necesario)
+        if len(binario) < 11:
+            binario = binario.ljust(11, '0')  # Completar con ceros a la derecha
+        elif len(binario) > 11:
+            binario = binario[:11]  # Truncar si es más largo
+
+        # Agregar el bit de signo y retornar
+        return signo + binario
