@@ -18,5 +18,7 @@ def mostrar_registros(registers):
             .set_table_styles([
                 {"selector": "thead th", "props": [("text-align", "center"), ("background-color", "#37580D"), ("color", "white")]}
             ])
-            .highlight_max(subset=["Valor"], color="lightgreen")  # Resaltar el valor máximo
+            .highlight_max(subset=["Valor"], color="#37580D")  # Resaltar el valor máximo
+            .hide(axis="index"),
+            width=290
         )

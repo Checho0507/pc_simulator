@@ -1,8 +1,10 @@
 from collections import deque
+import time
 from simulator.alu import ALU
 
 class ControlUnit:
     def __init__(self, dataBus, addressBus, controlBus, registerBank, memory):
+        self.tiempo = 5
         self.alu = ALU()
         self.pila = deque()
         self.value_operation = ""
@@ -152,29 +154,40 @@ class ControlUnit:
         print("ControlUnit: Generating control signals")
         self.controlBus.sendControlSignal(signal)
         
-    def fetch(self):
-        print("Se inicia el fetch instruction:")
+    def fetch(self, mensaje_placeholder):
+        mensaje_placeholder.info("Se inicia el fetch instruction...")
+        time.sleep(self.tiempo)
         
-        self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR")
+        self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR", mensaje_placeholder)
+        time.sleep(self.tiempo)
         self.registerBank.MAR.setValue(self.memory.addressBus.getAddress())
-        self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "PC", "MAR")
+        self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "PC", "MAR", mensaje_placeholder)
+        time.sleep(self.tiempo)
         
-        self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
+        self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY", mensaje_placeholder)
+        time.sleep(self.tiempo)
         data = self.memory.read(int(self.memory.addressBus.getAddress(), 2))
-        self.memory.addressBus.receiveAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
+        self.memory.addressBus.receiveAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY", mensaje_placeholder)
+        time.sleep(self.tiempo)
         
-        self.memory.dataBus.sendData(data, "MEMORY", "MBR")
+        self.memory.dataBus.sendData(data, "MEMORY", "MBR", mensaje_placeholder)
+        time.sleep(self.tiempo)
         self.registerBank.MBR.setValue(self.memory.dataBus.data)
-        self.memory.dataBus.receiveData(data, "MEMORY", "MBR")
+        self.memory.dataBus.receiveData(data, "MEMORY", "MBR", mensaje_placeholder)
+        time.sleep(self.tiempo)
         
-        self.memory.dataBus.sendData(self.registerBank.MBR.getValue(), "MBR", "IR")
+        self.memory.dataBus.sendData(self.registerBank.MBR.getValue(), "MBR", "IR", mensaje_placeholder)
+        time.sleep(self.tiempo)
         self.registerBank.IR.setValue(self.memory.dataBus.getData())
-        self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "IR")
+        self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "IR", mensaje_placeholder)
+        time.sleep(self.tiempo)
         
-    def decode(self):
+    def decode(self, mensaje_placeholder):
         """
         Decodifica la instrucción almacenada en el IR (Instruction Register).
         """
+        
+        mensaje_placeholder.info("Se inicia el decode instruction...")
         # Obtener el valor del IR (Instruction Register)
         IR = self.registerBank.IR.getValue()
 

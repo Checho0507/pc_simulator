@@ -20,48 +20,73 @@ class Simulator:
         self.registerBank = RegisterBank()
         self.memory = Memory(64, self.dataBus, self.addressBus)
         self.controlUnit = ControlUnit(self.dataBus, self.addressBus, self.controlBus, self.registerBank, self.memory)
-
-    def executeProgram(self, programs):
+        
+    def executeProgram(self, programs, message, PC, IR, MBR, MAR, ALU, CONTROL):
         print("Loading zero-address instructions:")
-        count = self.add_asigns(programs)
-        self.encode_instructions_zero(programs)
-        self.load_program_zero(programs)
+        message.info("Cargando programa...")
+        time.sleep(self.controlUnit.tiempo)
+        count = self.add_asigns(programs, message)
+        self.encode_instructions_zero(programs, message)
+        self.load_program_zero(programs, message)
+        message.info("Reiniciando el contador del programa...")
+        time.sleep(self.controlUnit.tiempo)
         self.registerBank.PC.setValue("00000000000000000000000000000000")
         self.pila.clear()
         for i in range(len(programs)-count):
-            self.controlBus.sendControlSignal("FETCH")
-            self.controlUnit.fetch()
-            self.controlBus.receiveControlSignal()
+            self.controlBus.sendControlSignal("11000000000000000000000000000011", message)
+            time.sleep(self.controlUnit.tiempo)
+            self.controlBus.receiveControlSignal(message)
+            time.sleep(self.controlUnit.tiempo)
+            self.controlUnit.fetch(message)
             
-            self.controlBus.sendControlSignal("DECODE")
-            codop, operand1, operand2 = self.controlUnit.decode()
-            self.controlBus.receiveControlSignal()
+            self.controlBus.sendControlSignal("11011000000000000000000000011011", message)
+            time.sleep(self.controlUnit.tiempo)
+            self.controlBus.receiveControlSignal(message)
+            time.sleep(self.controlUnit.tiempo)
+            codop, operand1, operand2 = self.controlUnit.decode(message)
+            message.success(f"Instrucción decodificada con éxito: \ncodop: {codop} - operando 1: {operand1} - operando 2: {operand2}")
             
-            self.controlBus.sendControlSignal("EXECUTE")
+            self.controlBus.sendControlSignal("11011011000000000000000011011011", message)
+            time.sleep(self.controlUnit.tiempo)
+            self.controlBus.receiveControlSignal(message)
+            time.sleep(self.controlUnit.tiempo)
             self.execute(codop, operand1, operand2)
-            self.controlBus.receiveControlSignal()
             
             self.controlUnit.value_operation=self.int_to_binary(self.controlUnit.alu.getResult())
             self.controlUnit.alu.add(1,int(self.registerBank.PC.getValue(),2),1,1)
             
             self.registerBank.PC.setValue(self.int_to_binary(self.controlUnit.alu.getResult(),32))
         
-    def add_asigns(self, instructions):
-        print("Agregando asignaciones al banco de registros")
+    def add_asigns(self, instructions, message):
         count = 0
+        message.info("Agregando asignaciones al banco de registros...")
+        time.sleep(self.controlUnit.tiempo)
         for instr in instructions:
             if "=" in instr:  # Asignación al banco de registros
                 count += 1
                 var, val = instr.split(" = ")
+                var2 = ""
+                for i in var:
+                    if i != " ":
+                        var2+=i
                 value = int(val.strip())
-                encoded = self.encode_assignment(var.strip(), value)
-                print(f"Encoded assignment {instr}: {encoded}")
+                message.info(f"Codificando la instrucción {var} = {val}")
+                time.sleep(self.controlUnit.tiempo)
+                encoded = self.encode_assignment(var2.strip(), value)
+                message.success(f"Instrucción codificada con éxito: {encoded}")
+                time.sleep(self.controlUnit.tiempo)
+                #mensaje = f"Encoded assignment {instr}: {encoded}"
                 encoded_val = self.int_to_binary(value)
-                self.registerBank.addRegister(var, encoded_val)  # Guardar en el banco de registros
+                self.registerBank.addRegister(var2, encoded_val)  # Guardar en el banco de registros
+                message.info(f"Agregando la instrucción {var} = {val} al banco de registros")
+                time.sleep(self.controlUnit.tiempo)
+                message.success(f"Instrucción agregada con éxito: {encoded}")
+                time.sleep(self.controlUnit.tiempo)
         return count
     
-    def encode_instructions_zero(self, instructions):
-        print("Codificando instrucción a nivel máquina:")
+    def encode_instructions_zero(self, instructions, message):
+        message.info("Codificando instrucciones a nivel máquina...")
+        time.sleep(self.controlUnit.tiempo)
         # Crear una pila para las instrucciones de cero direcciones
         pila = deque()
         for instr in instructions:
@@ -72,15 +97,18 @@ class Simulator:
                     operands = parts[1]  # Operandos como strings
                 else:
                     operands = None
+                message.info(f"Codificando la instrucción {instr}")
+                time.sleep(self.controlUnit.tiempo)
                 encoded = self.controlUnit.encode_zero_address_instruction(operation, operands, pila)
-                print(f"Encoded instruction {instr}: {encoded}")
+                message.success(f"Instrucción codificada con éxito {instr}: {encoded}")
+                time.sleep(self.controlUnit.tiempo)
         
-    def load_program_zero(self, instructions):
+    def load_program_zero(self, instructions, message):
         """
         Procesa y carga las instrucciones y asignaciones en memoria.
         """
         
-        print("Cargando el programa a la memoria:")
+        message.info("Cargando el programa a la memoria...")
         for instr in instructions:
             if "=" not in instr:  # Instrucciones a memoria
                 parts = instr.split()
@@ -90,31 +118,57 @@ class Simulator:
                 else:
                     operands = None
                 encoded = self.controlUnit.encode_zero_address_instruction(operation, operands, self.pila)
-                self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR")
+                self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR", message)
+                time.sleep(self.controlUnit.tiempo)
                 self.registerBank.MAR.setValue(self.memory.addressBus.getAddress())
-                self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "PC", "MAR")
+                self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "PC", "MAR", message)
+                time.sleep(self.controlUnit.tiempo)
                 
                 if parts[0] == "PUSH":
                     if self.registerBank.getRegister(parts[1]):
-                        self.memory.dataBus.sendData(encoded, "REGISTER", "MBR")
+                        self.memory.dataBus.sendData(encoded, "REGISTER", "MBR", message)
+                        time.sleep(self.controlUnit.tiempo)
                         self.registerBank.MBR.setValue(self.memory.dataBus.getData())
-                        self.memory.dataBus.receiveData(encoded, "CONTROL UNIT", "MBR")
+                        self.memory.dataBus.receiveData(encoded, "CONTROL UNIT", "MBR", message)
+                        time.sleep(self.controlUnit.tiempo)
                 else:
-                    self.memory.dataBus.sendData(encoded, "CONTROL UNIT", "MBR")
+                    self.memory.dataBus.sendData(encoded, "CONTROL UNIT", "MBR", message)
+                    time.sleep(self.controlUnit.tiempo)
                     self.registerBank.MBR.setValue(self.memory.dataBus.getData())
-                    self.memory.dataBus.receiveData(encoded, "CONTROL UNIT", "MBR")
+                    self.memory.dataBus.receiveData(encoded, "CONTROL UNIT", "MBR", message)
+                    time.sleep(self.controlUnit.tiempo)
                     
-                self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
+                self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY", message)
+                time.sleep(self.controlUnit.tiempo)
                 MAR = self.memory.addressBus.getAddress()
-                self.memory.addressBus.receiveAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY")
+                self.memory.addressBus.receiveAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY", message)
+                time.sleep(self.controlUnit.tiempo)
                 
-                self.memory.dataBus.sendData(self.registerBank.MBR.getValue(), "MBR", "MEMORY")
+                self.memory.dataBus.sendData(self.registerBank.MBR.getValue(), "MBR", "MEMORY", message)
+                time.sleep(self.controlUnit.tiempo)
                 MBR = self.memory.dataBus.getData()
-                self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "MEMORY")
+                self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "MEMORY", message)
+                time.sleep(self.controlUnit.tiempo)
                 
+                message.info(f"Escribiendo {MBR} en la posición de memoria {int(MAR, 2)}")
+                time.sleep(self.controlUnit.tiempo)
                 self.memory.write(int(MAR, 2), MBR)
                 
+                message.info("Aumentando el contador del programa para posicionar las instrucciones en memoria...")
+                time.sleep(self.controlUnit.tiempo)
+                self.memory.dataBus.sendData(self.registerBank.PC.getValue(), "PC", "ALU", message)
+                time.sleep(self.controlUnit.tiempo)
+                self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "PC", "ALU", message)
+                time.sleep(self.controlUnit.tiempo)
+                message.info("Realizando operación ADD en la ALU")
+                time.sleep(self.controlUnit.tiempo)
                 self.controlUnit.alu.add(1,int(self.registerBank.PC.getValue(),2),1,1)
+                message.success(f"Operación ADD realizada con éxito: {self.int_to_binary(int(self.controlUnit.alu.getResult()),32)}")
+                time.sleep(self.controlUnit.tiempo)
+                self.memory.dataBus.sendData(self.int_to_binary(self.controlUnit.alu.getResult(),32), "ALU", "PC", message)
+                time.sleep(self.controlUnit.tiempo)
+                self.memory.dataBus.receiveData(self.int_to_binary(self.controlUnit.alu.getResult(),32), "ALU", "PC", message)
+                time.sleep(self.controlUnit.tiempo)
                 self.registerBank.PC.setValue(self.int_to_binary(int(self.controlUnit.alu.getResult()),32))
     
     def int_to_binary(self, value, bits=12):
