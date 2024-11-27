@@ -80,6 +80,8 @@ class Simulator:
             CONTROL_UNIT_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>CONTROL UNIT: {self.registerBank.IR.getValue()}</strong></p>""", unsafe_allow_html=True)  
             MESSAGE_placeholder.success(f"Instrucción decodificada con éxito: \ncodop: {codop} - operando 1: {operand1} - operando 2: {operand2}")
             time.sleep(self.controlUnit.tiempo)
+            CONTROL_UNIT_placeholder.write(f"###### _CONTROL UNIT_: {self.controlUnit.controlBus.getControlSignal()}")
+            
             
             self.controlBus.sendControlSignal("11011011000000000000000011011011", MESSAGE_placeholder)
             CONTROL_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Control: {self.controlUnit.controlBus.getControlSignal()}</strong></p>""", unsafe_allow_html=True)   
@@ -87,7 +89,7 @@ class Simulator:
             CONTROL_placeholder.write(f"###### _Bus de Control_: {self.controlUnit.controlBus.getControlSignal()}")
             self.controlBus.receiveControlSignal(MESSAGE_placeholder)
             time.sleep(self.controlUnit.tiempo)
-            self.execute(codop, operand1, operand2, REG_placeholder, BANK_REGISTER_placeholder, ALU_placeholder, MESSAGE_placeholder, DATA_placeholder, MEMORY_placeholder)
+            self.execute(codop, operand1, operand2, REG_placeholder, BANK_REGISTER_placeholder, ALU_placeholder, MESSAGE_placeholder, DATA_placeholder, OUTPUT_placeholder)
             
             self.controlUnit.value_operation=self.int_to_binary(self.controlUnit.alu.getResult())
             self.controlUnit.alu.add(1,int(self.registerBank.PC.getValue(),2),1,1)
@@ -328,12 +330,12 @@ class Simulator:
         value_binary = f"{abs(value):011b}"
         return codop + self.controlUnit.registros_binarios[variable] + sign_bit + value_binary
 
-    def execute(self, codop, operand1, operand2, REG_placeholder, REG_BANK_placeholder, ALU_placeholder, MESSAGE_placeholder, DATA_placeholder, MEMORY_placeholder):
+    def execute(self, codop, operand1, operand2, REG_placeholder, REG_BANK_placeholder, ALU_placeholder, MESSAGE_placeholder, DATA_placeholder, OUTPUT_placeholder):
         direction = self.controlUnit.identify_directions(codop)
         if direction == 0:
-            self.execute_zero(codop, operand1, operand2, REG_placeholder, REG_BANK_placeholder, ALU_placeholder, MESSAGE_placeholder, DATA_placeholder, MEMORY_placeholder)
+            self.execute_zero(codop, operand1, operand2, REG_placeholder, REG_BANK_placeholder, ALU_placeholder, MESSAGE_placeholder, DATA_placeholder, OUTPUT_placeholder)
                 
-    def execute_zero(self, codop, operand1, operand2, REG_placeholder, REG_BANK_placeholder, ALU_placeholder, MESSAGE_placeholder, DATA_placeholder, MEMORY_placeholder):
+    def execute_zero(self, codop, operand1, operand2, REG_placeholder, REG_BANK_placeholder, ALU_placeholder, MESSAGE_placeholder, DATA_placeholder, OUTPUT_placeholder):
         
         if str(codop) == "00000001":
             for key, value in self.controlUnit.registros_binarios.items():
@@ -346,11 +348,11 @@ class Simulator:
             self.memory.dataBus.sendData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU", MESSAGE_placeholder)
             REG_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>REG: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
-            DATA_placeholder.write(f"###### _REG_: {self.memory.dataBus.getData()}")
+            REG_placeholder.write(f"###### _REG_: {self.memory.dataBus.getData()}")
             DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
             DATA_placeholder.write(f"###### _Bus de Datos_: {self.memory.dataBus.getData()}")
-            REG_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>REG: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
+            ALU_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>ALU: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
             self.memory.dataBus.receiveData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU", MESSAGE_placeholder)
             time.sleep(self.controlUnit.tiempo)
             ALU_placeholder.write(f"###### _ALU_: {self.memory.dataBus.getData()}")
@@ -361,7 +363,7 @@ class Simulator:
             time.sleep(self.controlUnit.tiempo)
             self.controlUnit.alu.add(sign1, operand01, sign2, operand02)
             ALU_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>ALU: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}</strong></p>""", unsafe_allow_html=True)
-            MEMORY_placeholder.success("Datos procesados exitosamente")
+            MESSAGE_placeholder.success("Datos procesados exitosamente")
             time.sleep(self.controlUnit.tiempo)
             ALU_placeholder.write(f"###### _ALU_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
             
@@ -379,7 +381,7 @@ class Simulator:
             self.memory.dataBus.receiveData(codop+operand1+self.pila[0][1:], "ALU", "REGISTER BANK", MESSAGE_placeholder)
             REG_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>REG: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
-            REG_placeholder.write(f"###### _REG_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}", MESSAGE_placeholder)
+            REG_placeholder.write(f"###### _REG_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
             time.sleep(1)
             
         elif str(codop) == "00000011":
@@ -404,7 +406,7 @@ class Simulator:
             time.sleep(self.controlUnit.tiempo)
             self.controlUnit.alu.sub(sign1, operand01, sign2, operand02)
             ALU_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>ALU: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}</strong></p>""", unsafe_allow_html=True)
-            MEMORY_placeholder.success("Datos procesados exitosamente")
+            MESSAGE_placeholder.success("Datos procesados exitosamente")
             time.sleep(self.controlUnit.tiempo)
             ALU_placeholder.write(f"###### _ALU_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
             
@@ -447,7 +449,7 @@ class Simulator:
             time.sleep(self.controlUnit.tiempo)
             self.controlUnit.alu.mul(sign1, operand01, sign2, operand02)
             ALU_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>ALU: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}</strong></p>""", unsafe_allow_html=True)
-            MEMORY_placeholder.success("Datos procesados exitosamente")
+            MESSAGE_placeholder.success("Datos procesados exitosamente")
             time.sleep(self.controlUnit.tiempo)
             ALU_placeholder.write(f"###### _ALU_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
             
@@ -490,7 +492,7 @@ class Simulator:
             time.sleep(self.controlUnit.tiempo)
             self.controlUnit.alu.div(sign1, operand01, sign2, operand02)
             ALU_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>ALU: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}</strong></p>""", unsafe_allow_html=True)
-            MEMORY_placeholder.success("Datos procesados exitosamente")
+            MESSAGE_placeholder.success("Datos procesados exitosamente")
             time.sleep(self.controlUnit.tiempo)
             ALU_placeholder.write(f"###### _ALU_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
             
@@ -510,7 +512,7 @@ class Simulator:
             REG_placeholder.write(f"###### _REG_: {codop+operand1+self.pila[0][1:]}")
             
         elif str(codop) == "00000110":
-            MESSAGE_placeholder(f"Agregando {self.pila[0]} al banco de registros")
+            MESSAGE_placeholder.info(f"Agregando {self.pila[0]} al banco de registros")
             time.sleep(self.controlUnit.tiempo)
             
             self.memory.dataBus.sendData(self.int_to_binary(self.controlUnit.alu.getResult(), 32), "ALU", "REGISTER BANK", MESSAGE_placeholder)
@@ -525,9 +527,13 @@ class Simulator:
             time.sleep(self.controlUnit.tiempo)
             REG_placeholder.write(f"###### _REG_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
             self.registerBank.addRegister(self.controlUnit.identify_key(operand1), self.pila[0])
-            mostrar_registros(self.registerBank.register, REG_BANK_placeholder)
+            mostrar_registros(self.registerBank.registers, REG_BANK_placeholder)
             print(self.registerBank.getRegister(self.controlUnit.identify_key(operand1)))
             self.pila.pop()
+            
+            salida = self.registerBank.registers[len(self.registerBank.registers)-1]
+            OUTPUT_placeholder.text_area("Salida respecto a la ejecución del programa", self.controlUnit.identify_key(operand1) + " = " + self.pila[0], disabled=True)
+            
         elif str(codop) == "11111111":
             self.registerBank.PC.setValue("00000000000000000000000000000000")
         

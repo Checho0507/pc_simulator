@@ -8,7 +8,7 @@ class ControlBus:
         return self.controlSignal
 
     def sendControlSignal(self, signal, mensaje_placeholder):
-        self.controlSignals = signal
+        self.controlSignal = signal
         if signal == "11000000000000000000000000000011":
             signal = "FETCH"
         elif signal == "11011000000000000000000000011011":
@@ -18,4 +18,4 @@ class ControlBus:
         mensaje_placeholder.info(f"Bus de Control: Enviando señal de control '{signal}'")
 
     def receiveControlSignal(self, mensaje_placeholder):
-        mensaje_placeholder.info(f"ControlBus: Reciviendo señal de control '{self.controlSignals}'")
+        mensaje_placeholder.info(f"ControlBus: Reciviendo señal de control '{self.controlSignal}'")
