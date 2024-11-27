@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-def mostrar_registros(registers):
+def mostrar_registros(registers, registros):
         """
         Muestra todos los registros del RegisterBank en un DataFrame de Streamlit.
         """
@@ -12,7 +12,7 @@ def mostrar_registros(registers):
         df_registros = pd.DataFrame(registros_data, columns=["Registro", "Valor"])
 
         # Estilizar y mostrar el DataFrame en Streamlit
-        st.dataframe(
+        registros.dataframe(
             df_registros.style
             .set_properties(**{'text-align': 'center'})  # Centrar el texto
             .set_table_styles([

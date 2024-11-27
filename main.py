@@ -1,6 +1,6 @@
 import streamlit as st
-from frontend.simulator import init
-from simulator.simulator import Simulator
+from frontend.init_page import init_page
 
 if __name__ == "__main__":
-    init()
+    st.set_page_config(layout="wide")
+    init_page()

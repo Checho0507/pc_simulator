@@ -6,6 +6,12 @@ class Memory:
         self.size = size
         self.dataBus = dataBus
         self.addressBus = addressBus
+        
+    def getMemory(self):
+        data = {}
+        for i in range(len(self.memoryArray)):
+            data[i] = self.memoryArray[i]
+        return(data)
 
     def read(self, address):
         if 0 <= address < self.size:

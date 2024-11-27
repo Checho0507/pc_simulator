@@ -4,7 +4,7 @@ from simulator.alu import ALU
 
 class ControlUnit:
     def __init__(self, dataBus, addressBus, controlBus, registerBank, memory):
-        self.tiempo = 5
+        self.tiempo = 1
         self.alu = ALU()
         self.pila = deque()
         self.value_operation = ""
@@ -154,40 +154,70 @@ class ControlUnit:
         print("ControlUnit: Generating control signals")
         self.controlBus.sendControlSignal(signal)
         
-    def fetch(self, mensaje_placeholder):
-        mensaje_placeholder.info("Se inicia el fetch instruction...")
+    def fetch(self, MESSAGE_placeholder, DIR_placeholder, DAT_placeholder, PC_placeholder,  IR_placeholder, MAR_placeholder, MBR_placeholder, ADDRESS_placeholder, DATA_placeholder):
+        MESSAGE_placeholder.info("Se inicia el fetch instruction...")
         time.sleep(self.tiempo)
         
-        self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR", mensaje_placeholder)
+        self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR", MESSAGE_placeholder)
+        PC_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>PC: {self.memory.addressBus.getAddress()}</strong></p>""", unsafe_allow_html=True)   
         time.sleep(self.tiempo)
+        PC_placeholder.write(f"###### _PC_: {self.registerBank.PC.getValue()}")
+        ADDRESS_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Direcciones: {self.memory.addressBus.getAddress()}</strong></p>""", unsafe_allow_html=True)  
+        time.sleep(self.tiempo)
+        ADDRESS_placeholder.write(f"###### _Bus de Direcciones_: {self.memory.addressBus.getAddress()}")
         self.registerBank.MAR.setValue(self.memory.addressBus.getAddress())
-        self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "PC", "MAR", mensaje_placeholder)
+        MAR_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>MAR: {self.memory.addressBus.getAddress()}</strong></p>""", unsafe_allow_html=True)  
+        self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "PC", "MAR", MESSAGE_placeholder)
         time.sleep(self.tiempo)
+        MAR_placeholder.write(f"###### _MAR_: {self.registerBank.MAR.getValue()}")
+        time.sleep(1)
         
-        self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY", mensaje_placeholder)
+        self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY", MESSAGE_placeholder)
+        MAR_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>MAR: {self.memory.addressBus.getAddress()}</strong></p>""", unsafe_allow_html=True)  
         time.sleep(self.tiempo)
+        MAR_placeholder.write(f"###### _MAR_: {self.registerBank.MAR.getValue()}")
+        ADDRESS_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Direcciones: {self.memory.addressBus.getAddress()}</strong></p>""", unsafe_allow_html=True)  
+        time.sleep(self.tiempo)
+        ADDRESS_placeholder.write(f"###### _Bus de Direcciones_: {self.memory.addressBus.getAddress()}")
         data = self.memory.read(int(self.memory.addressBus.getAddress(), 2))
-        self.memory.addressBus.receiveAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY", mensaje_placeholder)
+        DIR_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>DIR: {self.memory.addressBus.getAddress()}</strong></p>""", unsafe_allow_html=True)  
+        self.memory.addressBus.receiveAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY", MESSAGE_placeholder)
         time.sleep(self.tiempo)
+        DIR_placeholder.write(f"###### _DIR_: {self.memory.addressBus.getAddress()}")
         
-        self.memory.dataBus.sendData(data, "MEMORY", "MBR", mensaje_placeholder)
+        self.memory.dataBus.sendData(data, "MEMORY", "MBR", MESSAGE_placeholder)
+        DAT_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>DAT: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)  
         time.sleep(self.tiempo)
+        DAT_placeholder.write(f"###### _DAT_: {self.memory.dataBus.getData()}")
+        DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)  
+        time.sleep(self.tiempo)
+        DATA_placeholder.write(f"###### _Bus de Datos_: {self.memory.dataBus.getData()}")
         self.registerBank.MBR.setValue(self.memory.dataBus.data)
-        self.memory.dataBus.receiveData(data, "MEMORY", "MBR", mensaje_placeholder)
+        MBR_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>MBR: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)  
+        self.memory.dataBus.receiveData(data, "MEMORY", "MBR", MESSAGE_placeholder)
         time.sleep(self.tiempo)
+        MBR_placeholder.write(f"###### _MBR_: {self.registerBank.MBR.getValue()}")
+        time.sleep(1)
         
-        self.memory.dataBus.sendData(self.registerBank.MBR.getValue(), "MBR", "IR", mensaje_placeholder)
+        self.memory.dataBus.sendData(self.registerBank.MBR.getValue(), "MBR", "IR", MESSAGE_placeholder)
+        MBR_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>MBR: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)  
         time.sleep(self.tiempo)
+        MBR_placeholder.write(f"###### _MBR_: {self.registerBank.MBR.getValue()}")
+        DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)  
+        time.sleep(self.tiempo)
+        DATA_placeholder.write(f"###### _Bus de Datos_: {self.memory.dataBus.getData()}")
         self.registerBank.IR.setValue(self.memory.dataBus.getData())
-        self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "IR", mensaje_placeholder)
+        IR_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>IR: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)  
+        self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "IR", MESSAGE_placeholder)
         time.sleep(self.tiempo)
+        IR_placeholder.write(f"###### _IR_: {self.registerBank.IR.getValue()}")
         
-    def decode(self, mensaje_placeholder):
+    def decode(self, MESSAGE_placeholder):
         """
         Decodifica la instrucción almacenada en el IR (Instruction Register).
         """
         
-        mensaje_placeholder.info("Se inicia el decode instruction...")
+        MESSAGE_placeholder.info("Se inicia el decode instruction...")
         # Obtener el valor del IR (Instruction Register)
         IR = self.registerBank.IR.getValue()
 

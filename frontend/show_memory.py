@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-def mostrar_memoria(memory_array):
+def mostrar_memoria(memory_array, memory):
     """
     Muestra el contenido de un array de memoria en un DataFrame estilizado en Streamlit.
     :param memory_array: Array que representa la memoria (lista de valores).
@@ -10,7 +10,7 @@ def mostrar_memoria(memory_array):
     df_memoria = pd.DataFrame(enumerate(memory_array), columns=["Dirección", "Valor"])
 
     # Eliminar la columna de índice en la visualización
-    st.dataframe(
+    memory.dataframe(
         df_memoria.drop(columns=["Dirección"]).style  # Elimina la columna "Dirección"
         .set_properties(**{'text-align': 'center'})  # Centrar el texto
         .set_table_styles([
@@ -21,6 +21,3 @@ def mostrar_memoria(memory_array):
         height=245
         
     )
-    
-    # Mensaje adicional
-    st.caption("Memoria representada en un formato de tabla con valores binarios de 32 bits.")
