@@ -20,7 +20,7 @@ def init_page():
         CONTROL_UNIT_placeholder = st.empty()
         st.write("#### _PROGRAMA_")
         programa = st.text_area("Escribe las instrucciones del programa separadas por punto y coma", 
-                            "A = 1; B = 2; PUSH A; PUSH B; ADD; POP C; END")
+                            "A = -1; C = 2; D = 3; E = 4; PUSH D; PUSH E; SUB; PUSH A; MUL; POP X; PUSH A; PUSH C; MUL; PUSH X; DIV; POP Z; END")
         if st.button("Cargar Programa"):
             execute = True
         MESSAGE_placeholder = st.empty()

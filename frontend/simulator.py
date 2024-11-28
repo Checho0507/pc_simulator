@@ -19,7 +19,7 @@ def init(programa, execute, MESSAGE_placeholder, PC_placeholder, IR_placeholder,
     CONTROL_placeholder.write(f"###### _Bus de Control_: {simulator.controlUnit.controlBus.getControlSignal()}")
     ADDRESS_placeholder.write(f"###### _Bus de Direcciones_: {simulator.memory.addressBus.getAddress()}")
        
-    OUTPUT_placeholder.text_area("Salida respecto a la ejecución del programa", disabled=True)
+    OUTPUT_placeholder.text_area("Salida respecto a la ejecución del programa", simulator.salida, disabled=True)
     
     REGISTER_placeholder.write(f"###### _REG_: {simulator.memory.dataBus.getData()}")
     mostrar_registros(simulator.registerBank.registers, BANK_REGISTER_placeholder)

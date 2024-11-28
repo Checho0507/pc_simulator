@@ -16,6 +16,7 @@ from frontend.show_registers import mostrar_registros
 class Simulator:
     def __init__(self):
         self.pila = deque()
+        self.salida = ''
         # Crear buses
         self.dataBus = DataBus()
         self.addressBus = AddressBus()
@@ -47,7 +48,7 @@ class Simulator:
         DIR_placeholder.write(f"###### _DIR_: {self.registerBank.PC.getValue()}")
         mostrar_registros(self.registerBank.registers, BANK_REGISTER_placeholder)
         mostrar_memoria(self.memory.memoryArray, MEMORY_placeholder)
-        OUTPUT_placeholder.text_area("Salida respecto a la ejecución del programa", disabled=True)
+        OUTPUT_placeholder.text_area("Salida respecto a la ejecución del programa","", disabled=True)
         time.sleep(self.controlUnit.tiempo)
         count = self.add_asigns(programa, REG_placeholder, MESSAGE_placeholder, BANK_REGISTER_placeholder, CONTROL_UNIT_placeholder, DATA_placeholder)
         self.encode_instructions_zero(programa, MESSAGE_placeholder, CONTROL_UNIT_placeholder)
@@ -336,7 +337,6 @@ class Simulator:
             self.execute_zero(codop, operand1, operand2, REG_placeholder, REG_BANK_placeholder, ALU_placeholder, MESSAGE_placeholder, DATA_placeholder, OUTPUT_placeholder)
                 
     def execute_zero(self, codop, operand1, operand2, REG_placeholder, REG_BANK_placeholder, ALU_placeholder, MESSAGE_placeholder, DATA_placeholder, OUTPUT_placeholder):
-        
         if str(codop) == "00000001":
             for key, value in self.controlUnit.registros_binarios.items():
                 if value == operand1:
@@ -529,15 +529,16 @@ class Simulator:
             self.registerBank.addRegister(self.controlUnit.identify_key(operand1), self.pila[0])
             mostrar_registros(self.registerBank.registers, REG_BANK_placeholder)
             print(self.registerBank.getRegister(self.controlUnit.identify_key(operand1)))
-            self.pila.pop()
+            if list(self.registerBank.getRegister(self.controlUnit.identify_key(operand1)))[0]=="1":
+                self.salida = self.controlUnit.identify_key(operand1) + " = " + f"{-1*int(self.registerBank.getRegister(self.controlUnit.identify_key(operand1))[1:], 2)}"
+            else:
+                self.salida = self.controlUnit.identify_key(operand1) + " = " + f"{1*int(self.registerBank.getRegister(self.controlUnit.identify_key(operand1))[1:], 2)}"
             
-            salida = self.registerBank.registers[len(self.registerBank.registers)-1]
-            OUTPUT_placeholder.text_area("Salida respecto a la ejecución del programa", self.controlUnit.identify_key(operand1) + " = " + self.pila[0], disabled=True)
+            self.pila.pop()
+        
             
         elif str(codop) == "11111111":
             self.registerBank.PC.setValue("00000000000000000000000000000000")
-        
-        print(self.pila)
         
     def float_a_binario_12bits(self, numero):
         """
