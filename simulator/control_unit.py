@@ -4,7 +4,7 @@ from simulator.alu import ALU
 
 class ControlUnit:
     def __init__(self, dataBus, addressBus, controlBus, registerBank, memory):
-        self.tiempo = 0.005
+        self.tiempo = 0
         self.alu = ALU()
         self.pila = deque()
         self.value_operation = ""

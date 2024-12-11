@@ -16,13 +16,12 @@ def init_page():
         MBR_placeholder = st.empty()
         MAR_placeholder = st.empty()
         ALU_placeholder = st.empty()
+        PSW_placeholder = st.empty()
         st.write("")
         CONTROL_UNIT_placeholder = st.empty()
-        st.write("#### _PROGRAMA_")
-        programa = st.text_area("Escribe las instrucciones del programa separadas por punto y coma", 
-                            "A = -1; C = 2; D = 3; E = 4; PUSH D; PUSH E; SUB; PUSH A; MUL; POP X; PUSH A; PUSH C; MUL; PUSH X; DIV; POP Z; END")
-        if st.button("Cargar Programa"):
-            execute = True
+        st.write("#### _BANCO DE REGISTROS_:")
+        REGISTER_placerholder = st.empty()
+        BANK_REGISTER_placeholder = st.empty()
         MESSAGE_placeholder = st.empty()
         
     # Contenido de la segunda columna
@@ -32,12 +31,11 @@ def init_page():
         CONTROL_placeholder = st.empty()
         ADDRESS_placeholder = st.empty()
         st.write("")
-        st.write("")
-        st.write("")
-        st.write("")
-        st.write("")
-        st.write("")
-        st.write("")
+        st.write("#### _PROGRAMA_")
+        programa = st.text_area("Escribe las instrucciones del programa separadas por punto y coma", 
+                            "A = -1; C = 2; D = 3; E = 4; PUSH D; PUSH E; SUB; PUSH A; MUL; POP X; PUSH A; PUSH C; MUL; PUSH X; DIV; POP Z; END")
+        if st.button("Cargar Programa"):
+            execute = True
         st.write("")
         
         st.write("#### _SALIDA DEL PROGRAMA_:")
@@ -45,9 +43,6 @@ def init_page():
 
     # Contenido de la tercera columna
     with col3:
-        st.write("#### _BANCO DE REGISTROS_:")
-        REGISTER_placerholder = st.empty()
-        BANK_REGISTER_placeholder = st.empty()
         
         st.write("#### _MEMORIA_:")
         MEM_DATA_placerholder = st.empty()

@@ -33,9 +33,10 @@ class Simulator:
                        ADDRESS_placeholder, CONTROL_placeholder, BANK_REGISTER_placeholder, MEMORY_placeholder,
                        OUTPUT_placeholder):
         print("Loading zero-address instructions:")
-        MESSAGE_placeholder.info("Cargando programa...")
+        MESSAGE_placeholder.info("Cargando programa a la memoria...")
         PC_placeholder.write(f"###### _PC_: {self.registerBank.PC.getValue()}")
         IR_placeholder.write(f"###### _IR_: {self.registerBank.IR.getValue()}")
+        
         MBR_placeholder.write(f"###### _MBR_: {self.registerBank.MBR.getValue()}")
         MAR_placeholder.write(f"###### _MAR_: {self.registerBank.MAR.getValue()}")
         ALU_placeholder.write(f"###### _ALU_: {self.int_to_binary(self.controlUnit.alu.getResult(),32)}")
@@ -50,9 +51,9 @@ class Simulator:
         mostrar_memoria(self.memory.memoryArray, MEMORY_placeholder)
         OUTPUT_placeholder.text_area("Salida respecto a la ejecución del programa","", disabled=True)
         time.sleep(self.controlUnit.tiempo)
-        count = self.add_asigns(programa, REG_placeholder, MESSAGE_placeholder, BANK_REGISTER_placeholder, CONTROL_UNIT_placeholder, DATA_placeholder)
-        self.encode_instructions_zero(programa, MESSAGE_placeholder, CONTROL_UNIT_placeholder)
         self.load_program_zero(programa, REG_placeholder, DIR_placeholder, DAT_placeholder, MESSAGE_placeholder, PC_placeholder, MBR_placeholder, MAR_placeholder, ALU_placeholder, CONTROL_UNIT_placeholder, DATA_placeholder, ADDRESS_placeholder, MEMORY_placeholder)
+        count = self.add_asigns(programa, REG_placeholder, MESSAGE_placeholder, BANK_REGISTER_placeholder, CONTROL_UNIT_placeholder, DATA_placeholder)
+        #self.encode_instructions_zero(programa, MESSAGE_placeholder, CONTROL_UNIT_placeholder)
         MESSAGE_placeholder.info("Reiniciando el contador del programa...")
         time.sleep(self.controlUnit.tiempo)
         self.registerBank.PC.setValue("00000000000000000000000000000000")
@@ -150,8 +151,6 @@ class Simulator:
                     operands = parts[1]  # Operandos como strings
                 else:
                     operands = None
-                MESSAGE_placeholder.info(f"Unidad de control decodificando la instrucción {instr}")
-                time.sleep(self.controlUnit.tiempo)
                 encoded = self.controlUnit.encode_zero_address_instruction(operation, operands, pila)
                 MESSAGE_placeholder.success(f"Instrucción decodificada con éxito {instr}: {encoded}")
                 CONTROL_UNIT_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>CONTROL UNIT: {encoded}</strong></p>""", unsafe_allow_html=True)
@@ -162,9 +161,6 @@ class Simulator:
         """
         Procesa y carga las instrucciones y asignaciones en memoria.
         """
-        
-        MESSAGE_placeholder.info("Cargando el programa a la memoria...")
-        time.sleep(self.controlUnit.tiempo)
         for instr in programa:
             if "=" not in instr:  # Instrucciones a memoria
                 parts = instr.split()
@@ -177,69 +173,69 @@ class Simulator:
                 CONTROL_UNIT_placeholder.write(f"###### _CONTROL UNIT_: {encoded}")
                 self.memory.addressBus.sendAddress(self.registerBank.PC.getValue(), "PC", "MAR", MESSAGE_placeholder)
                 PC_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>PC: {self.registerBank.PC.getValue()}</strong></p>""", unsafe_allow_html=True)
-                time.sleep(self.controlUnit.tiempo)
+                
                 PC_placeholder.write(f"###### _PC_: {self.registerBank.PC.getValue()}")
                 ADDRESS_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Direcciones: {self.memory.addressBus.getAddress()}</strong></p>""", unsafe_allow_html=True)
-                time.sleep(self.controlUnit.tiempo)
+                
                 ADDRESS_placeholder.write(f"###### _Bus de Direcciones_: {self.memory.addressBus.getAddress()}")
                 self.registerBank.MAR.setValue(self.memory.addressBus.getAddress())
                 MAR_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>MAR: {self.memory.addressBus.getAddress()}</strong></p>""", unsafe_allow_html=True)
                 self.memory.addressBus.receiveAddress(self.registerBank.PC.getValue(), "PC", "MAR", MESSAGE_placeholder)
-                time.sleep(self.controlUnit.tiempo)
+                
                 MAR_placeholder.write(f"###### _MAR_: {self.registerBank.MAR.getValue()}")
                 
                 if parts[0] == "PUSH":
                     if self.registerBank.getRegister(parts[1]):
                         self.memory.dataBus.sendData(encoded, "REGISTERS", "MBR", MESSAGE_placeholder)
                         REG_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>REG: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
-                        time.sleep(self.controlUnit.tiempo)
+                        
                         REG_placeholder.write(f"###### _REG_: {encoded}")
                         DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
-                        time.sleep(self.controlUnit.tiempo)
+                        
                         DATA_placeholder.write(f"###### _Bus de Datos_: {self.memory.dataBus.getData()}")
                         self.registerBank.MBR.setValue(self.memory.dataBus.getData())
                         MBR_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>MBR: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
                         self.memory.dataBus.receiveData(encoded, "REGISTERS", "MBR", MESSAGE_placeholder)
-                        time.sleep(self.controlUnit.tiempo)
+                        
                         MBR_placeholder.write(f"###### _MBR_: {self.registerBank.MBR.getValue()}")
                 else:
                     self.memory.dataBus.sendData(encoded, "CONTROL UNIT", "MBR", MESSAGE_placeholder)
                     CONTROL_UNIT_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>CONTOL UNIT: {encoded}</strong></p>""", unsafe_allow_html=True)
-                    time.sleep(self.controlUnit.tiempo)
+                    
                     CONTROL_UNIT_placeholder.write(f"###### _CONTROL UNIT_: {encoded}")
                     DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
-                    time.sleep(self.controlUnit.tiempo)
+                    
                     DATA_placeholder.write(f"###### _Bus de Datos_: {self.memory.dataBus.getData()}")
                     self.registerBank.MBR.setValue(self.memory.dataBus.getData())
                     MBR_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>MBR: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
                     self.memory.dataBus.receiveData(encoded, "CONTROL UNIT", "MBR", MESSAGE_placeholder)
-                    time.sleep(self.controlUnit.tiempo)
+                    
                     MBR_placeholder.write(f"###### _MBR_: {self.registerBank.MBR.getValue()}")
                     
                 self.memory.addressBus.sendAddress(self.registerBank.MAR.getValue(), "MAR", "MEMORY", MESSAGE_placeholder)
                 MAR_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>MAR: {self.memory.addressBus.getAddress()}</strong></p>""", unsafe_allow_html=True)
-                time.sleep(self.controlUnit.tiempo)
+                
                 MAR_placeholder.write(f"###### _MAR_: {self.registerBank.MAR.getValue()}")
                 ADDRESS_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Direcciones: {self.memory.addressBus.getAddress()}</strong></p>""", unsafe_allow_html=True)
-                time.sleep(self.controlUnit.tiempo)
+                
                 ADDRESS_placeholder.write(f"###### _Bus de Direcciones_: {self.memory.addressBus.getAddress()}")
                 DIR_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>DIR: {self.memory.addressBus.getAddress()}</strong></p>""", unsafe_allow_html=True)
                 MAR = self.memory.addressBus.getAddress()
                 self.memory.addressBus.receiveAddress(MAR, "MAR", "MEMORY", MESSAGE_placeholder)
-                time.sleep(self.controlUnit.tiempo)
+                
                 DIR_placeholder.write(f"###### _DIR_: {self.registerBank.MAR.getValue()}")
                 
                 self.memory.dataBus.sendData(self.registerBank.MBR.getValue(), "MBR", "MEMORY", MESSAGE_placeholder)
                 MBR_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>MBR: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
-                time.sleep(self.controlUnit.tiempo)
+                
                 MBR_placeholder.write(f"###### _MBR_: {self.registerBank.MBR.getValue()}")
                 DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
-                time.sleep(self.controlUnit.tiempo)
+                
                 DATA_placeholder.write(f"###### _Bus de datos_: {self.registerBank.MBR.getValue()}")
                 MBR = self.memory.dataBus.getData()
                 DAT_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>DAT: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
                 self.memory.dataBus.receiveData(self.registerBank.MBR.getValue(), "MBR", "MEMORY", MESSAGE_placeholder)
-                time.sleep(self.controlUnit.tiempo)
+                
                 DAT_placeholder.write(f"###### _DAT_: {self.registerBank.MBR.getValue()}")
                 
                 MESSAGE_placeholder.info(f"Escribiendo {MBR} en la posición de memoria {int(MAR, 2)}")
@@ -247,43 +243,42 @@ class Simulator:
                 self.memory.write(int(MAR, 2), MBR)
                 mostrar_memoria(self.memory.memoryArray, MEMORY_placeholder)
                 MESSAGE_placeholder.success(f"Se ha escrito {MBR} en la posición de memoria {int(MAR, 2)} con éxito")
-                time.sleep(self.controlUnit.tiempo)
                 
                 MESSAGE_placeholder.info("Aumentando el contador del programa para posicionar las instrucciones en memoria...")
                 self.memory.dataBus.sendData(self.registerBank.PC.getValue(), "PC", "ALU", MESSAGE_placeholder)
                 PC_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>PC: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
-                time.sleep(self.controlUnit.tiempo)
+                
                 PC_placeholder.write(f"###### _PC_: {self.registerBank.PC.getValue()}")
                 DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
-                time.sleep(self.controlUnit.tiempo)
+                
                 DATA_placeholder.write(f"###### _Bus de Datos_: {self.memory.dataBus.getData()}")
                 ALU_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>ALU: {self.memory.dataBus.getData()}</strong></p>""", unsafe_allow_html=True)
                 self.memory.dataBus.receiveData(self.registerBank.PC.getValue(), "PC", "ALU", MESSAGE_placeholder)
-                time.sleep(self.controlUnit.tiempo)
+                
                 ALU_placeholder.write(f"###### _ALU_: {self.registerBank.PC.getValue()}")
                 
                 
                 MESSAGE_placeholder.info("Realizando operación ADD en la ALU")
-                time.sleep(self.controlUnit.tiempo)
+                
                 self.controlUnit.alu.add(1,int(self.registerBank.PC.getValue(),2),1,1)
                 ALU_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>ALU: {self.int_to_binary(int(self.controlUnit.alu.getResult()),32)}</strong></p>""", unsafe_allow_html=True)
                 MESSAGE_placeholder.success(f"Operación ADD realizada con éxito: {self.int_to_binary(int(self.controlUnit.alu.getResult()),32)}")
-                time.sleep(self.controlUnit.tiempo)
+                
                 ALU_placeholder.write(f"###### _ALU_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
-                time.sleep(1)
+                
                 self.memory.dataBus.sendData(self.int_to_binary(self.controlUnit.alu.getResult(),32), "ALU", "PC", MESSAGE_placeholder)
                 ALU_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>ALU: {self.int_to_binary(int(self.controlUnit.alu.getResult()),32)}</strong></p>""", unsafe_allow_html=True)
-                time.sleep(self.controlUnit.tiempo)
+                
                 ALU_placeholder.write(f"###### _ALU_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
-                time.sleep(self.controlUnit.tiempo)
+                
                 DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {self.int_to_binary(int(self.controlUnit.alu.getResult()),32)}</strong></p>""", unsafe_allow_html=True)
-                time.sleep(self.controlUnit.tiempo)
+                
                 DATA_placeholder.write(f"###### _Bus de Datos_: {self.memory.dataBus.getData()}")
                 self.registerBank.PC.setValue(self.int_to_binary(int(self.controlUnit.alu.getResult()),32))
-                time.sleep(self.controlUnit.tiempo)
+                
                 PC_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>PC: {self.int_to_binary(int(self.controlUnit.alu.getResult()),32)}</strong></p>""", unsafe_allow_html=True)
                 self.memory.dataBus.receiveData(self.int_to_binary(self.controlUnit.alu.getResult(),32), "ALU", "PC", MESSAGE_placeholder)
-                time.sleep(self.controlUnit.tiempo)
+                
                 PC_placeholder.write(f"###### _PC_: {self.registerBank.PC.getValue()}")
     
     def int_to_binary(self, value, bits=12):
@@ -377,7 +372,7 @@ class Simulator:
             ALU_placeholder.write(f"###### _ALU_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
             DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
-            ALU_placeholder.write(f"###### _Bus de Datos_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
+            DATA_placeholder.write(f"###### _Bus de Datos_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
             self.memory.dataBus.receiveData(codop+operand1+self.pila[0][1:], "ALU", "REGISTER BANK", MESSAGE_placeholder)
             REG_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>REG: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
@@ -394,7 +389,7 @@ class Simulator:
             REG_placeholder.write(f"###### _REG_: {codop+self.pila[0][1:]+self.pila[1][1:]}")
             DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {codop+self.pila[0][1:]+self.pila[1][1:]}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
-            ALU_placeholder.write(f"###### _Bus de Datos_: {codop+self.pila[0][1:]+self.pila[1][1:]}")
+            DATA_placeholder.write(f"###### _Bus de Datos_: {codop+self.pila[0][1:]+self.pila[1][1:]}")
             self.memory.dataBus.receiveData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU", MESSAGE_placeholder)
             ALU_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>ALU: {codop+self.pila[0][1:]+self.pila[1][1:]}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
@@ -420,7 +415,7 @@ class Simulator:
             ALU_placeholder.write(f"###### _ALU_: {codop+operand1+self.pila[0][1:]}")
             DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {codop+operand1+self.pila[0][1:]}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
-            ALU_placeholder.write(f"###### _Bus de Datos_: {codop+operand1+self.pila[0][1:]}")
+            DATA_placeholder.write(f"###### _Bus de Datos_: {codop+operand1+self.pila[0][1:]}")
             self.memory.dataBus.receiveData(codop+operand1+self.pila[0][1:], "REGISTER BANK", "ALU", MESSAGE_placeholder)
             REG_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>REG: {codop+operand1+self.pila[0][1:]}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
@@ -437,7 +432,7 @@ class Simulator:
             REG_placeholder.write(f"###### _REG_: {codop+self.pila[0][1:]+self.pila[1][1:]}")
             DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {codop+self.pila[0][1:]+self.pila[1][1:]}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
-            ALU_placeholder.write(f"###### _Bus de Datos_: {codop+self.pila[0][1:]+self.pila[1][1:]}")
+            DATA_placeholder.write(f"###### _Bus de Datos_: {codop+self.pila[0][1:]+self.pila[1][1:]}")
             self.memory.dataBus.receiveData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU", MESSAGE_placeholder)
             ALU_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>ALU: {codop+self.pila[0][1:]+self.pila[1][1:]}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
@@ -464,7 +459,7 @@ class Simulator:
             ALU_placeholder.write(f"###### _ALU_: {codop+operand1+self.pila[0][1:]}")
             DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {codop+operand1+self.pila[0][1:]}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
-            ALU_placeholder.write(f"###### _Bus de Datos_: {codop+operand1+self.pila[0][1:]}")
+            DATA_placeholder.write(f"###### _Bus de Datos_: {codop+operand1+self.pila[0][1:]}")
             self.memory.dataBus.receiveData(codop+operand1+self.pila[0][1:], "REGISTER BANK", "ALU", MESSAGE_placeholder)
             REG_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>REG: {codop+operand1+self.pila[0][1:]}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
@@ -480,7 +475,7 @@ class Simulator:
             REG_placeholder.write(f"###### _REG_: {codop+self.pila[0][1:]+self.pila[1][1:]}")
             DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {codop+self.pila[0][1:]+self.pila[1][1:]}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
-            ALU_placeholder.write(f"###### _Bus de Datos_: {codop+self.pila[0][1:]+self.pila[1][1:]}")
+            DATA_placeholder.write(f"###### _Bus de Datos_: {codop+self.pila[0][1:]+self.pila[1][1:]}")
             self.memory.dataBus.receiveData(codop+self.pila[0][1:]+self.pila[1][1:], "REGISTER BANK", "ALU", MESSAGE_placeholder)
             ALU_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>ALU: {codop+self.pila[0][1:]+self.pila[1][1:]}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
@@ -505,7 +500,7 @@ class Simulator:
             ALU_placeholder.write(f"###### _ALU_: {codop+operand1+self.pila[0][1:]}")
             DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {codop+operand1+self.pila[0][1:]}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
-            ALU_placeholder.write(f"###### _Bus de Datos_: {codop+operand1+self.pila[0][1:]}")
+            DATA_placeholder.write(f"###### _Bus de Datos_: {codop+operand1+self.pila[0][1:]}")
             self.memory.dataBus.receiveData(codop+operand1+self.pila[0][1:], "REGISTER BANK", "ALU", MESSAGE_placeholder)
             REG_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>REG: {codop+operand1+self.pila[0][1:]}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
@@ -521,7 +516,7 @@ class Simulator:
             ALU_placeholder.write(f"###### _ALU_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
             DATA_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>Bus de Datos: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
-            ALU_placeholder.write(f"###### _Bus de Datos_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
+            DATA_placeholder.write(f"###### _Bus de Datos_: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}")
             self.memory.dataBus.receiveData(codop+operand1+self.pila[0][1:], "REGISTER BANK", "ALU", MESSAGE_placeholder)
             REG_placeholder.markdown(f"""<style>.custom-text {{font-size: 15px;color: #37580D;}}</style><p class='custom-text'><strong>REG: {self.int_to_binary(self.controlUnit.alu.getResult(), 32)}</strong></p>""", unsafe_allow_html=True)
             time.sleep(self.controlUnit.tiempo)
